@@ -10,38 +10,25 @@ import java.util.Random;
  *
  * @author Paul Kernfeld <hi-entropy@gmail.com>
  */
-public class RawValue implements Value {
+public class RawValue extends TypedValue<ByteBuffer> {
 
-    public final ByteBuffer data;
-
-    /**
-     * Makes a defensive copy
-     *
-     * @param data
-     */
-    public RawValue(ByteBuffer data) {
-        final ByteBuffer thisDataMutable = ByteBuffer.allocate(data.limit());
-        thisDataMutable.put(data);
-        this.data = thisDataMutable.asReadOnlyBuffer();
+    public RawValue(byte[] data) {
+        super(data);
     }
 
-    /**
-     * Makes a defensive copy
-     *
-     * @param data
-     */
-    public RawValue(byte[] data) {
-        this(ByteBuffer.allocate(data.length).put(data));
+    @Override
+    public ByteBuffer serialize() {
+        return this.data;
+    }
+
+    @Override
+    protected ByteBuffer deserialize(ByteBuffer data) {
+        return this.data;
     }
 
     public static RawValue pseudorandom(int length) {
         final byte[] data = new byte[length];
         new Random().nextBytes(data);
         return new RawValue(data);
-    }
-
-    @Override
-    public ByteBuffer getBytes() {
-        return this.data;
     }
 }

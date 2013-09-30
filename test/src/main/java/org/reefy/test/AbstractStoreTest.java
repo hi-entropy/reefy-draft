@@ -1,6 +1,11 @@
 package org.reefy.test;
 
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
+
 import org.junit.Assert;
+import org.junit.Test;
 import org.reefy.transportrest.api.Key;
 import org.reefy.transportrest.api.RawKey;
 import org.reefy.transportrest.api.RawValue;
@@ -8,6 +13,8 @@ import org.reefy.transportrest.api.Value;
 import org.reefy.transportrest.api.store.Store;
 import org.reefy.transportrest.api.store.StoreException;
 
+import java.nio.ByteBuffer;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -22,22 +29,18 @@ public abstract class AbstractStoreTest {
         this.storeFactory = storeFactory;
     }
 
-    public void testPutGet() {
+    @Test
+    public void testPutGet() throws InterruptedException {
         final CountDownLatch latch = new CountDownLatch(1);
 
         final Store store = storeFactory.build();
-        final Key testKey = RawKey.pseudorandom();
-        final Value testValue = RawValue.pseudorandom(VALUE_SIZE);
-        store.put(testKey, testValue, new Store.PutCallback() {
-            @Override
-            public void succeed() {
-                latch.countDown();
-            }
+        final Key<ByteBuffer> testKey = RawKey.pseudorandom();
+        final RawValue testValue = RawValue.pseudorandom(VALUE_SIZE);
 
-            @Override
-            public void fail(StoreException error) {
-                Assert.fail();
-            }
-        });
+        testKey.put(store, testValue);
+
+        final ByteBuffer testKey.get(store).wait();
+
+
     }
 }

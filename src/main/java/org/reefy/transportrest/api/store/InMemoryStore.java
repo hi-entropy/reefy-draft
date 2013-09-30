@@ -9,6 +9,11 @@ import org.reefy.transportrest.api.Value;
 public class InMemoryStore implements Store {
 
     @Override
-    public void put(Key key, Value value, PutCallback callback) {
+    public <V> void put(Key key, Value<V> value, PutCallback<V> callback) {
+    }
+
+    @Override
+    public <T> void get(Key key, GetCallback<T> callback) {
+
     }
 }

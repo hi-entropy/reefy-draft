@@ -1,5 +1,9 @@
 package org.reefy.transportrest.api;
 
+import com.google.common.util.concurrent.ListenableFuture;
+
+import org.reefy.transportrest.api.store.Store;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -9,4 +13,10 @@ import java.nio.ByteBuffer;
  */
 public interface Key {
     public ByteBuffer getBytes();
+
+//    public ListenableFuture<V> get(Store store);
+//
+//    public void put(Store store, Value<V> testValue);
+
+    public int distance(Key key);
 }
