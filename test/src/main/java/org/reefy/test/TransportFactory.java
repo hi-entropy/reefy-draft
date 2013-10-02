@@ -4,11 +4,19 @@ import org.reefy.transportrest.api.TransportServer;
 import org.reefy.transportrest.api.transport.Contact;
 import org.reefy.transportrest.api.transport.TransportClient;
 
+import java.util.Map;
+
 /**
  * @author Paul Kernfeld <hi-entropy@gmail.com>
  */
 public interface TransportFactory<C extends Contact> {
-    TransportServer<C> buildServer();
+    ServerWhatever<C> buildServer();
+
+    public interface ServerWhatever<C extends Contact> {
+        public C getContact();
+
+        public TransportFactory<C> getServer();
+    }
 
     TransportClient<C> buildClient();
 }

@@ -1,24 +1,30 @@
 package org.reefy.samplechat;
 
+import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.AbstractIdleService;
 
-import org.reefy.transportrest.api.Key;
-import org.reefy.transportrest.api.RawKey;
-import org.reefy.transportrest.api.RawValue;
-import org.reefy.transportrest.api.SimpleAppClient;
-import org.reefy.transportrest.api.Value;
+import org.reefy.transportrest.api.*;
+import org.reefy.transportrest.api.transport.TransportClient;
+import org.reefy.transportrest.api.transport.local.LocalContact;
+import org.reefy.transportrest.api.transport.local.LocalTransportClient;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.concurrent.ConcurrentMap;
+
+import static org.joda.time.Duration.standardMinutes;
 
 /**
  * @author Paul Kernfeld - pk@knewton.com
  */
 public class HelloWorldClient extends AbstractIdleService {
 
-    public static void main(int[] args) throws IOException {
-        final HelloWorldClient helloWorldClient = new HelloWorldClient(client);
+    public static void main(String[] args) throws IOException {
+        ConcurrentMap<LocalContact, AppServer> contactsToServers = Maps.newConcurrentMap();
+        final TransportClient transportClient = new LocalTransportClient(contactsToServers);
+        final SimpleAppClient simpleAppClient = new SimpleAppClient(transportClient);
+        final HelloWorldClient helloWorldClient = new HelloWorldClient(simpleAppClient);
 
         // Just use a random key
         final Key key = RawKey.pseudorandom();
@@ -30,24 +36,38 @@ public class HelloWorldClient extends AbstractIdleService {
         final Value value = new RawValue(message.getBytes());
 
         // Put the key/value pair into Reefy
-        helloWorldClient.put(key, value, );
+        helloWorldClient.getAppClient().put(key, value, standardMinutes(10), new SimpleAppClient.PutCallback() {
+            @Override
+            public void succeed() {
+                System.out.println("Hello world message uploaded.");
+            }
+
+            @Override
+            public void fail(Throwable e) {
+                System.out.println("Hello world message failed to upload: " + e.getMessage());
+            }
+        });
     }
 
-    private final SimpleAppClient client;
+    private final SimpleAppClient appClient;
 
-    public HelloWorldClient(SimpleAppClient client) {
-        this.client = client;
+    public HelloWorldClient(SimpleAppClient appClient) {
+        this.appClient = appClient;
     }
 
     @Override
     protected void startUp() throws Exception {
-        client.startAndWait();
+        appClient.startAndWait();
 
         System.out.println("Starting up...");
     }
 
     @Override
     protected void shutDown() throws Exception {
-        client.stopAndWait();
+        appClient.stopAndWait();
+    }
+
+    public SimpleAppClient getAppClient() {
+        return appClient;
     }
 }

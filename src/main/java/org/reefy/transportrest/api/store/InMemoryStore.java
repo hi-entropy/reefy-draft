@@ -16,4 +16,9 @@ public class InMemoryStore implements Store {
     public <T> void get(Key key, GetCallback<T> callback) {
 
     }
+
+    @Override
+    public void close() {
+        // We don't need to do anything
+    }
 }

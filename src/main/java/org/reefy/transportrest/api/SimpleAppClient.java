@@ -1,23 +1,19 @@
 package org.reefy.transportrest.api;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.AbstractIdleService;
 
-import org.reefy.transportrest.api.transport.Contact;
-import org.reefy.transportrest.api.transport.TransportClient;
-import org.reefy.transportrest.api.transport.TransportException;
+import org.joda.time.Duration;
+import org.reefy.transportrest.api.transport.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Paul Kernfeld - pk@knewton.com
  */
-public class SimpleAppClient extends AbstractIdleService {
+public class SimpleAppClient extends AbstractIdleService implements AppClient {
 
     private static final int N_PATHS = 3;
     private static final int MAX_N_HOPS = 32;
@@ -29,6 +25,7 @@ public class SimpleAppClient extends AbstractIdleService {
         this.transport = transport;
     }
 
+    @Override
     public void get(final Key key, final GetCallback callback) {
         if (contacts.isEmpty()) {
             callback.fail(new NoContactsException());
@@ -46,6 +43,7 @@ public class SimpleAppClient extends AbstractIdleService {
                 callback.succeed(value);
             }
 
+            // Keep trying until we find the right server
             @Override
             public void redirect(Contact contact) {
                 ++nTimesCalled;
@@ -65,15 +63,11 @@ public class SimpleAppClient extends AbstractIdleService {
         getter.redirect(contactsSorted.get(0));
     }
 
-    public static abstract class GetCallback {
-        public abstract void succeed(Value value);
-
-        public abstract void fail(Throwable e);
-    }
-
-    public void put(final Key key, final Value value, final PutCallback callback) {
+    @Override
+    public void put(final Key key, final Value value, final Duration duration, final PutCallback callback) {
         if (contacts.isEmpty()) {
             callback.fail(new NoContactsException());
+            return;
         }
 
         final ArrayList<Contact> contactsSorted = new ArrayList<Contact>(contacts);
@@ -88,6 +82,7 @@ public class SimpleAppClient extends AbstractIdleService {
                 callback.succeed();
             }
 
+            // Keep trying until we find the right server
             @Override
             public void redirect(Contact contact) {
                 ++nTimesCalled;
@@ -107,16 +102,9 @@ public class SimpleAppClient extends AbstractIdleService {
         putter.redirect(contactsSorted.get(0));
     }
 
-    public static abstract class PutCallback {
-        public abstract void succeed();
-
-        public abstract void fail(Throwable e);
-    }
-
     @Override
     protected void startUp() throws Exception {
         transport.startAndWait();
-        this.notify();
     }
 
     @Override
