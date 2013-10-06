@@ -7,6 +7,6 @@ import org.reefy.transportrest.api.transport.TransportException;
  */
 public class ContactNotFoundException extends TransportException {
     public ContactNotFoundException() {
-        super("Need to get rid of this class.");
+        super("No contacts were found.");
     }
 }

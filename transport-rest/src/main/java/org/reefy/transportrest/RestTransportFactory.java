@@ -10,7 +10,7 @@ import org.reefy.transportrest.api.transport.TransportClient;
 public class RestTransportFactory implements TransportFactory<RestContact> {
     @Override
     public TransportServer<RestContact> buildServer() {
-        return new RestTransportServer();
+        return new RestTransportServer(restContact);
     }
 
     @Override

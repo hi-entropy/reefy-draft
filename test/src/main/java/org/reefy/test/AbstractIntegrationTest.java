@@ -28,7 +28,8 @@ public abstract class AbstractIntegrationTest<C extends Contact> {
     @Test
     public void testPutGet() {
         final TransportClient<C> client = transportFactory.buildClient();
-        final TransportFactory.ServerWhatever<C> serverWhatever = transportFactory.buildServer();
+        final TransportFactory.ServerWhatever<C> serverWhatever =
+            transportFactory.buildServer(null);
 
         final AppClient appClient = appFactory.buildClient();
 

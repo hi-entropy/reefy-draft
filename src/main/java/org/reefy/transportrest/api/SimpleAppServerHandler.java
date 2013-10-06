@@ -6,10 +6,10 @@ import org.reefy.transportrest.api.store.StoreException;
 /**
  * @author Paul Kernfeld <hi-entropy@gmail.com>
  */
-public class SimpleAppServer implements AppServer {
+public class SimpleAppServerHandler implements AppServerHandler {
     private final Store store;
 
-    public SimpleAppServer(Store store) {
+    public SimpleAppServerHandler(Store store) {
         this.store = store;
     }
 

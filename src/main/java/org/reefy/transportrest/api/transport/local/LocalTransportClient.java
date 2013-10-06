@@ -13,9 +13,10 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class LocalTransportClient extends AbstractService implements TransportClient<LocalContact> {
 
-    private final ConcurrentMap<LocalContact, AppServer> contactsToServers;
+    private final ConcurrentMap<LocalContact, LocalTransportServer> contactsToServers;
 
-    public LocalTransportClient(ConcurrentMap<LocalContact, AppServer> contactsToServers) {
+    public LocalTransportClient(
+        ConcurrentMap<LocalContact, LocalTransportServer> contactsToServers) {
         this.contactsToServers = contactsToServers;
     }
 
@@ -31,14 +32,14 @@ public class LocalTransportClient extends AbstractService implements TransportCl
 
     @Override
     public void get(LocalContact contact, Key key, final GetCallback callback) {
-        final AppServer server = contactsToServers.get(contact);
+        final LocalTransportServer server = contactsToServers.get(contact);
 
         if (server == null) {
             callback.fail(new ContactNotFoundException());
             return;
         }
 
-        server.get(key, new AppServer.GetCallback() {
+        server.getAppServerHandler().get(key, new AppServerHandler.GetCallback() {
             @Override
             public void succeed(Value value) {
                 callback.succeed(value);
