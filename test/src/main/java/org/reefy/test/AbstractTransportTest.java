@@ -6,7 +6,6 @@ import org.reefy.transportrest.api.AppServerHandler;
 import org.reefy.transportrest.api.Key;
 import org.reefy.transportrest.api.RawKey;
 import org.reefy.transportrest.api.RawValue;
-import org.reefy.transportrest.api.TransportServer;
 import org.reefy.transportrest.api.Value;
 import org.reefy.transportrest.api.transport.Contact;
 import org.reefy.transportrest.api.transport.TransportClient;
@@ -28,12 +27,9 @@ public abstract class AbstractTransportTest<C extends Contact> {
     private class GetPresentAppServerHandler implements AppServerHandler {
         @Override
         public void get(Key key, GetCallback callback) {
-            if (key.equals(testKey)) {
-                callback.succeed(testValue);
-                return;
-            }
+            Assert.assertEquals(testKey, key);
 
-            callback.fail(new ValueNotFoundException());
+            callback.present(testValue);
         }
     }
 
@@ -50,7 +46,8 @@ public abstract class AbstractTransportTest<C extends Contact> {
 
         client.get(serverWhatever.getContact(), testKey, new TransportClient.GetCallback() {
             @Override
-            public void succeed(Value value) {
+            public void present(Value value) {
+                // Succeed
                 Assert.assertEquals(testValue, value);
                 client.stopAndWait();
             }
@@ -58,6 +55,52 @@ public abstract class AbstractTransportTest<C extends Contact> {
             @Override
             public void redirect(Contact contact) {
                 Assert.fail("Redirected to " + contact);
+            }
+
+            @Override
+            public void notFound() {
+                Assert.fail("Key not found.");
+            }
+
+            @Override
+            public void fail(TransportException exception) {
+                Assert.fail("Get failed: " + exception.getMessage());
+            }
+        });
+    }
+
+    private class GetNotFoundAppServerHandler implements AppServerHandler {
+        @Override
+        public void get(Key key, GetCallback callback) {
+            Assert.assertEquals(testKey, key);
+
+            callback.notFound();
+        }
+    }
+
+    @Test
+    public void testGetNotFound() {
+        final TransportClient<C> client = transportFactory.buildClient();
+        final TransportFactory.ServerWhatever<C> serverWhatever =
+            transportFactory.buildServer(new GetNotFoundAppServerHandler());
+        serverWhatever.getServer().startAndWait();
+
+        client.get(serverWhatever.getContact(), testKey, new TransportClient.GetCallback() {
+            @Override
+            public void present(Value value) {
+                Assert.fail("Value retrieved: " + value);
+
+            }
+
+            @Override
+            public void redirect(Contact contact) {
+                Assert.fail("Redirected to " + contact);
+            }
+
+            @Override
+            public void notFound() {
+                // Succeed
+                client.stopAndWait();
             }
 
             @Override

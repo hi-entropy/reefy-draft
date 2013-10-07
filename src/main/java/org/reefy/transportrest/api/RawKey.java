@@ -91,22 +91,4 @@ public class RawKey implements Key {
     public String toString() {
         return printHexBinary(data.array());
     }
-
-
-    //    @Override
-//    public ListenableFuture get(Store store) {
-//        final SettableFuture future = SettableFuture.create();
-//        store.get(this, new Store.GetCallback() {
-//            @Override
-//            public void succeed(Value<V> value) {
-//                future.set(value.get());
-//            }
-//
-//            @Override
-//            public void fail(StoreException error) {
-//                future.setException(error);
-//            }
-//        });
-//        return future;
-//    }
 }

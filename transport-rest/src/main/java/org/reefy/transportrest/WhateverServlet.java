@@ -37,7 +37,7 @@ public class WhateverServlet extends HttpServlet {
         final Key key = new RawKey(parseHexBinary(keyHex));
         appServerHandler.get(key, new AppServerHandler.GetCallback() {
             @Override
-            public void succeed(Value value) {
+            public void present(Value value) {
                 resp.setStatus(HttpServletResponse.SC_OK);
                 try {
                     resp.getWriter().append(printHexBinary(value.getBytes().array()));
@@ -48,8 +48,13 @@ public class WhateverServlet extends HttpServlet {
             }
 
             @Override
-            public void fail(Exception e) {
+            public void notFound() {
                 resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            }
+
+            @Override
+            public void fail(Exception e) {
+                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 try {
                     resp.getWriter().append(e.getMessage());
                 } catch (IOException e2) {

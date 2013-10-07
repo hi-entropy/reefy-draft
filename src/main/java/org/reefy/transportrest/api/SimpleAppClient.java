@@ -39,7 +39,7 @@ public class SimpleAppClient extends AbstractIdleService implements AppClient {
             volatile int nTimesCalled = 0;
 
             @Override
-            public void succeed(Value value) {
+            public void present(Value value) {
                 callback.succeed(value);
             }
 
@@ -52,6 +52,11 @@ public class SimpleAppClient extends AbstractIdleService implements AppClient {
                 } else {
                     callback.fail(new HopsExceededException());
                 }
+            }
+
+            @Override
+            public void notFound() {
+                callback.notFound();
             }
 
             @Override

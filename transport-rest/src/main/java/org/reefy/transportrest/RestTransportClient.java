@@ -14,10 +14,8 @@ import org.reefy.transportrest.api.RawValue;
 import org.reefy.transportrest.api.Value;
 import org.reefy.transportrest.api.transport.TransportClient;
 import org.reefy.transportrest.api.transport.TransportException;
-import org.reefy.transportrest.api.transport.ValueNotFoundException;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.URI;
 
 import javax.servlet.http.HttpServletResponse;
@@ -77,7 +75,7 @@ public class RestTransportClient
 
              // Success getting the value
              if (statusCode == HttpServletResponse.SC_OK) {
-                 callback.succeed(new RawValue(parseHexBinary(EntityUtils.toString((entity2)))));
+                 callback.present(new RawValue(parseHexBinary(EntityUtils.toString((entity2)))));
                  return;
              }
 
@@ -89,7 +87,7 @@ public class RestTransportClient
 
              // Not found
              if (statusCode == HttpServletResponse.SC_NOT_FOUND) {
-                 callback.fail(new TransportException(EntityUtils.toString(entity2)));
+                 callback.notFound();
                  return;
              }
 

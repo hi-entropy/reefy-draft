@@ -41,8 +41,13 @@ public class LocalTransportClient extends AbstractService implements TransportCl
 
         server.getAppServerHandler().get(key, new AppServerHandler.GetCallback() {
             @Override
-            public void succeed(Value value) {
-                callback.succeed(value);
+            public void present(Value value) {
+                callback.present(value);
+            }
+
+            @Override
+            public void notFound() {
+                callback.notFound();
             }
 
             @Override

@@ -7,7 +7,9 @@ public interface AppServerHandler {
     public void get(Key key, GetCallback callback);
 
     public interface GetCallback {
-        public void succeed(Value value);
+        public void present(Value value);
+
+        public void notFound();
 
         public void fail(Exception e);
     }

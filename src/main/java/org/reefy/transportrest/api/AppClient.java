@@ -9,16 +9,18 @@ public interface AppClient {
     void get(Key key, GetCallback callback);
 
     public interface GetCallback {
-        public abstract void succeed(Value value);
+        public void succeed(Value value);
 
-        public abstract void fail(Throwable e);
+        public void notFound();
+
+        public void fail(Throwable e);
     }
 
     void put(Key key, Value value, Duration duration, PutCallback callback);
 
     public interface PutCallback {
-        public abstract void succeed();
+        public void succeed();
 
-        public abstract void fail(Throwable e);
+        public void fail(Throwable e);
     }
 }

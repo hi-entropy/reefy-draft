@@ -22,9 +22,11 @@ public interface TransportClient<C extends Contact> extends Service {
     }
 
     public static interface GetCallback {
-        public void succeed(Value value);
+        public void present(Value value);
 
         void redirect(Contact contact);
+
+        public void notFound();
 
         public void fail(TransportException exception);
     }

@@ -17,7 +17,7 @@ public class SimpleAppServerHandler implements AppServerHandler {
         store.get(key, new Store.GetCallback() {
             @Override
             public void succeed(Value value) {
-                callback.succeed(value);
+                callback.present(value);
             }
 
             @Override
