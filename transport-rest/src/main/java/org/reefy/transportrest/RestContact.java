@@ -2,6 +2,7 @@ package org.reefy.transportrest;
 
 import org.reefy.transportrest.api.AbstractContact;
 import org.reefy.transportrest.api.Key;
+import org.reefy.transportrest.api.RawKey;
 import org.reefy.transportrest.api.transport.Contact;
 
 /**
@@ -24,5 +25,10 @@ public class RestContact extends AbstractContact {
 
     public int getPort() {
         return port;
+    }
+
+    public static RestContact fromString(String string) {
+        // TODO(PK): Implement this method
+        return new RestContact(RawKey.pseudorandom(), "", -1);
     }
 }

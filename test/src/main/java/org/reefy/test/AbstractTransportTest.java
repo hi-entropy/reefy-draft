@@ -25,8 +25,6 @@ public abstract class AbstractTransportTest<C extends Contact> {
     private final String message = "test";
     private final Value testValue = new RawValue(message.getBytes());
 
-
-
     private class GetPresentAppServerHandler implements AppServerHandler {
         @Override
         public void get(Key key, GetCallback callback) {
@@ -48,6 +46,7 @@ public abstract class AbstractTransportTest<C extends Contact> {
         final TransportClient<C> client = transportFactory.buildClient();
         final TransportFactory.ServerWhatever<C> serverWhatever =
             transportFactory.buildServer(new GetPresentAppServerHandler());
+        serverWhatever.getServer().startAndWait();
 
         client.get(serverWhatever.getContact(), testKey, new TransportClient.GetCallback() {
             @Override
@@ -58,12 +57,12 @@ public abstract class AbstractTransportTest<C extends Contact> {
 
             @Override
             public void redirect(Contact contact) {
-                Assert.fail("redirected to " + contact);
+                Assert.fail("Redirected to " + contact);
             }
 
             @Override
             public void fail(TransportException exception) {
-                Assert.fail("get failed " + exception.getMessage());
+                Assert.fail("Get failed: " + exception.getMessage());
             }
         });
     }

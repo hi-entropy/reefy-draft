@@ -10,9 +10,12 @@ import org.reefy.transportrest.api.store.StoreException;
 import org.reefy.transportrest.api.transport.Contact;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Random;
+
+import static javax.xml.bind.DatatypeConverter.printHexBinary;
 
 /**
  * Immutable
@@ -45,7 +48,7 @@ public class RawKey implements Key {
     public RawKey(ByteBuffer data) {
         Preconditions.checkArgument(data.limit() == 20);
         this.data = ByteBuffer.allocate(20);
-        this.data.put(data);
+        this.data.put(data.array());
     }
 
     public RawKey(byte[] data) {
@@ -69,6 +72,26 @@ public class RawKey implements Key {
         }
         return distance;
     }
+
+    @Override
+    public int hashCode() {
+        return data.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) { return false; }
+        if (obj == this) { return true; }
+        if (! (obj instanceof Key)) { return false; }
+
+        return this.data.equals(((Key) obj).getBytes());
+    }
+
+    @Override
+    public String toString() {
+        return printHexBinary(data.array());
+    }
+
 
     //    @Override
 //    public ListenableFuture get(Store store) {

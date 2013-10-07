@@ -46,11 +46,6 @@ public abstract class TypedValue<V> implements Value<V> {
         return this.serialize();
     }
 
-    @Override
-    public final V get() {
-        return data;
-    }
-
     protected abstract V deserialize(ByteBuffer data);
 
     protected abstract ByteBuffer serialize();

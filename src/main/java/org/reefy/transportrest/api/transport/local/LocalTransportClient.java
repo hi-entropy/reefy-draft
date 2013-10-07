@@ -4,7 +4,7 @@ import com.google.common.util.concurrent.AbstractService;
 import org.reefy.transportrest.api.*;
 import org.reefy.transportrest.api.transport.ContactNotFoundException;
 import org.reefy.transportrest.api.transport.TransportClient;
-import org.reefy.transportrest.api.transport.WhateverException;
+import org.reefy.transportrest.api.transport.TransportException;
 
 import java.util.concurrent.ConcurrentMap;
 
@@ -47,7 +47,7 @@ public class LocalTransportClient extends AbstractService implements TransportCl
 
             @Override
             public void fail(Exception e) {
-                callback.fail(new WhateverException());
+                callback.fail(new TransportException(e));
             }
         });
     }

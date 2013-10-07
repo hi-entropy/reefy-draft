@@ -10,7 +10,7 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.reefy.transportrest.api.Key;
+import org.reefy.transportrest.api.AppServerHandler;
 import org.reefy.transportrest.api.TransportServer;
 
 import java.util.EnumSet;
@@ -24,21 +24,21 @@ public class RestTransportServer extends AbstractService implements TransportSer
 
     private final Server server;
 
-    public RestTransportServer(RestContact restContact) {
+    public RestTransportServer(RestContact restContact, AppServerHandler appServerHandler) {
         this.restContact = restContact;
 
         final Injector injector = Guice.createInjector();
 
         server = new Server(restContact.getPort());
-        ServletContextHandler handler = new ServletContextHandler();
-        handler.setContextPath("/");
+        ServletContextHandler servletContextHandler = new ServletContextHandler();
+        servletContextHandler.setContextPath("/");
 
-        handler.addServlet(new ServletHolder(new WhateverServlet()), "/*");
+        servletContextHandler.addServlet(new ServletHolder(new WhateverServlet(appServerHandler)), "/*");
 
         FilterHolder guiceFilter = new FilterHolder(injector.getInstance(GuiceFilter.class));
-        handler.addFilter(guiceFilter, "/*", EnumSet.allOf(DispatcherType.class));
+        servletContextHandler.addFilter(guiceFilter, "/*", EnumSet.allOf(DispatcherType.class));
 
-        server.setHandler(handler);
+        server.setHandler(servletContextHandler);
     }
 
 
@@ -54,11 +54,11 @@ public class RestTransportServer extends AbstractService implements TransportSer
 
     @Override
     protected void doStop() {
-        //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public void get(Key key, GetCallback callback) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        try {
+            server.stop();
+        } catch (Exception e) {
+            notifyFailed(e);
+        }
+        notifyStopped();
     }
 }

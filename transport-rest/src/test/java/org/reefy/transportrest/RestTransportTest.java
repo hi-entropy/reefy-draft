@@ -1,12 +1,12 @@
 package org.reefy.transportrest;
 
-import org.reefy.test.AbstractIntegrationTest;
+import org.reefy.test.AbstractTransportTest;
 
 /**
  * @author Paul Kernfeld <hi-entropy@gmail.com>
  */
-public class RestTransportTest extends AbstractIntegrationTest<RestContact> {
+public class RestTransportTest extends AbstractTransportTest<RestContact> {
     public RestTransportTest() {
-        super(new RestTransportFactory(), appFactory);
+        super(new RestTransportFactory());
     }
 }
