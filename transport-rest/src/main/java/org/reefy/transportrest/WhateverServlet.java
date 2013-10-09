@@ -7,6 +7,7 @@ import org.reefy.transportrest.api.AppServerHandler;
 import org.reefy.transportrest.api.Key;
 import org.reefy.transportrest.api.RawKey;
 import org.reefy.transportrest.api.Value;
+import org.reefy.transportrest.api.transport.Contact;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -17,11 +18,11 @@ import java.io.IOException;
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
 
-public class WhateverServlet extends HttpServlet {
+public class WhateverServlet<C extends Contact> extends HttpServlet {
 
-    private final AppServerHandler appServerHandler;
+    private final AppServerHandler<C> appServerHandler;
 
-    public WhateverServlet(AppServerHandler appServerHandler) {
+    public WhateverServlet(AppServerHandler<C> appServerHandler) {
         this.appServerHandler = appServerHandler;
     }
 
@@ -35,7 +36,7 @@ public class WhateverServlet extends HttpServlet {
         final int length = req.getRequestURI().length();
         final String keyHex = req.getRequestURI().substring(length - 40, length);
         final Key key = new RawKey(parseHexBinary(keyHex));
-        appServerHandler.get(key, new AppServerHandler.GetCallback() {
+        appServerHandler.get(key, new AppServerHandler.GetCallback<C>() {
             @Override
             public void present(Value value) {
                 resp.setStatus(HttpServletResponse.SC_OK);
@@ -45,6 +46,12 @@ public class WhateverServlet extends HttpServlet {
                     // TODO: log this I guess?
                     e.printStackTrace();
                 }
+            }
+
+            @Override
+            public void redirect(C contact) {
+                resp.setStatus(HttpServletResponse.SC_MOVED_PERMANENTLY);
+                // TODO: put the contact into the message
             }
 
             @Override

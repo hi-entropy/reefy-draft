@@ -32,4 +32,9 @@ public class LocalTransportFactory implements TransportFactory<LocalContact> {
     public TransportClient<LocalContact> buildClient() {
         return new LocalTransportClient(contactsToServers);
     }
+
+    @Override
+    public LocalContact buildMockContact() {
+        return new LocalContact(RawKey.pseudorandom());
+    }
 }

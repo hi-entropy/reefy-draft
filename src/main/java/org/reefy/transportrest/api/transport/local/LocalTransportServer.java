@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.AbstractIdleService;
 
 import org.reefy.transportrest.api.AppServerHandler;
 import org.reefy.transportrest.api.TransportServer;
+import org.reefy.transportrest.api.transport.Contact;
 
 import javax.swing.*;
 
@@ -13,7 +14,7 @@ import javax.swing.*;
 public class LocalTransportServer
     extends AbstractIdleService implements TransportServer<LocalContact> {
 
-    private final AppServerHandler appServerHandler;
+    private final AppServerHandler<?> appServerHandler;
 
     public LocalTransportServer(AppServerHandler appServerHandler) {
         this.appServerHandler = appServerHandler;
@@ -29,7 +30,8 @@ public class LocalTransportServer
         // Do nothing
     }
 
-    public AppServerHandler getAppServerHandler() {
-        return appServerHandler;
+    // TODO: This is probably not the best place to do this cast.
+    public <C extends Contact> AppServerHandler<C> getAppServerHandler() {
+        return (AppServerHandler<C>) appServerHandler;
     }
 }

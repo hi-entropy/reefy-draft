@@ -2,6 +2,7 @@ package org.reefy.test;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.reefy.transportrest.api.AbstractContact;
 import org.reefy.transportrest.api.AppServerHandler;
 import org.reefy.transportrest.api.Key;
 import org.reefy.transportrest.api.RawKey;
@@ -11,6 +12,8 @@ import org.reefy.transportrest.api.transport.Contact;
 import org.reefy.transportrest.api.transport.TransportClient;
 import org.reefy.transportrest.api.transport.TransportException;
 import org.reefy.transportrest.api.transport.ValueNotFoundException;
+
+import java.util.Random;
 
 /**
  * @author Paul Kernfeld - pk@knewton.com
@@ -24,12 +27,39 @@ public abstract class AbstractTransportTest<C extends Contact> {
     private final String message = "test";
     private final Value testValue = new RawValue(message.getBytes());
 
-    private class GetPresentAppServerHandler implements AppServerHandler {
+    private class GetPresentAppServerHandler implements AppServerHandler<C> {
+        @Override
+        public void get(Key key, GetCallback<C> callback) {
+            Assert.assertEquals(testKey, key);
+
+            callback.present(testValue);
+        }
+    }
+
+    private class GetRedirectAppServerHandler implements AppServerHandler<C> {
+        @Override
+        public void get(Key key, GetCallback<C> callback) {
+            Assert.assertEquals(testKey, key);
+
+            callback.redirect(transportFactory.buildMockContact());
+        }
+    }
+
+    private class GetNotFoundAppServerHandler implements AppServerHandler<C> {
         @Override
         public void get(Key key, GetCallback callback) {
             Assert.assertEquals(testKey, key);
 
-            callback.present(testValue);
+            callback.notFound();
+        }
+    }
+
+    private class GetFailAppServerHandler implements AppServerHandler<C> {
+        @Override
+        public void get(Key key, GetCallback callback) {
+            Assert.assertEquals(testKey, key);
+
+            callback.fail(new Exception("test exception"));
         }
     }
 
@@ -44,7 +74,7 @@ public abstract class AbstractTransportTest<C extends Contact> {
             transportFactory.buildServer(new GetPresentAppServerHandler());
         serverWhatever.getServer().startAndWait();
 
-        client.get(serverWhatever.getContact(), testKey, new TransportClient.GetCallback() {
+        client.get(serverWhatever.getContact(), testKey, new TransportClient.GetCallback<C>() {
             @Override
             public void present(Value value) {
                 // Succeed
@@ -53,7 +83,7 @@ public abstract class AbstractTransportTest<C extends Contact> {
             }
 
             @Override
-            public void redirect(Contact contact) {
+            public void redirect(C contact) {
                 Assert.fail("Redirected to " + contact);
             }
 
@@ -69,15 +99,6 @@ public abstract class AbstractTransportTest<C extends Contact> {
         });
     }
 
-    private class GetNotFoundAppServerHandler implements AppServerHandler {
-        @Override
-        public void get(Key key, GetCallback callback) {
-            Assert.assertEquals(testKey, key);
-
-            callback.notFound();
-        }
-    }
-
     @Test
     public void testGetNotFound() {
         final TransportClient<C> client = transportFactory.buildClient();
@@ -85,7 +106,7 @@ public abstract class AbstractTransportTest<C extends Contact> {
             transportFactory.buildServer(new GetNotFoundAppServerHandler());
         serverWhatever.getServer().startAndWait();
 
-        client.get(serverWhatever.getContact(), testKey, new TransportClient.GetCallback() {
+        client.get(serverWhatever.getContact(), testKey, new TransportClient.GetCallback<C>() {
             @Override
             public void present(Value value) {
                 Assert.fail("Value retrieved: " + value);
@@ -93,7 +114,7 @@ public abstract class AbstractTransportTest<C extends Contact> {
             }
 
             @Override
-            public void redirect(Contact contact) {
+            public void redirect(C contact) {
                 Assert.fail("Redirected to " + contact);
             }
 
@@ -110,15 +131,6 @@ public abstract class AbstractTransportTest<C extends Contact> {
         });
     }
 
-    private class GetFailAppServerHandler implements AppServerHandler {
-        @Override
-        public void get(Key key, GetCallback callback) {
-            Assert.assertEquals(testKey, key);
-
-            callback.fail(new Exception("test exception"));
-        }
-    }
-
     @Test
     public void testGetFail() {
         final TransportClient<C> client = transportFactory.buildClient();
@@ -126,7 +138,7 @@ public abstract class AbstractTransportTest<C extends Contact> {
             transportFactory.buildServer(new GetFailAppServerHandler());
         serverWhatever.getServer().startAndWait();
 
-        client.get(serverWhatever.getContact(), testKey, new TransportClient.GetCallback() {
+        client.get(serverWhatever.getContact(), testKey, new TransportClient.GetCallback<C>() {
             @Override
             public void present(Value value) {
                 Assert.fail("Value retrieved: " + value);

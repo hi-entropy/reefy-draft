@@ -8,6 +8,7 @@ import org.reefy.transportrest.api.RawKey;
 import org.reefy.transportrest.api.TransportServer;
 import org.reefy.transportrest.api.transport.TransportClient;
 
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -32,5 +33,14 @@ public class RestTransportFactory implements TransportFactory<RestContact> {
     @Override
     public TransportClient<RestContact> buildClient() {
         return new RestTransportClient();
+    }
+
+    @Override
+    public RestContact buildMockContact() {
+        return new RestContact(
+            RawKey.pseudorandom(),
+            Integer.toString(new Random().nextInt()),
+            new Random().nextInt()
+        );
     }
 }

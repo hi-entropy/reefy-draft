@@ -13,11 +13,13 @@ import java.util.Map;
 public interface TransportFactory<C extends Contact> {
     public TransportClient<C> buildClient();
 
-    public ServerWhatever<C> buildServer(AppServerHandler handler);
+    public ServerWhatever<C> buildServer(AppServerHandler<C> handler);
 
     public interface ServerWhatever<C extends Contact> {
         public C getContact();
 
         public TransportServer<C> getServer();
     }
+
+    public C buildMockContact();
 }

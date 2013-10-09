@@ -31,7 +31,7 @@ public class LocalTransportClient extends AbstractService implements TransportCl
     }
 
     @Override
-    public void get(LocalContact contact, Key key, final GetCallback callback) {
+    public void get(LocalContact contact, Key key, final GetCallback<LocalContact> callback) {
         final LocalTransportServer server = contactsToServers.get(contact);
 
         if (server == null) {
@@ -39,7 +39,8 @@ public class LocalTransportClient extends AbstractService implements TransportCl
             return;
         }
 
-        server.getAppServerHandler().get(key, new AppServerHandler.GetCallback() {
+        final AppServerHandler<LocalContact> appServerHandler = server.getAppServerHandler();
+        appServerHandler.get(key, new AppServerHandler.GetCallback<LocalContact>() {
             @Override
             public void present(Value value) {
                 callback.present(value);
@@ -49,6 +50,12 @@ public class LocalTransportClient extends AbstractService implements TransportCl
             public void notFound() {
                 callback.notFound();
             }
+
+            @Override
+            public void redirect(LocalContact contact) {
+                callback.redirect(contact);
+            }
+
 
             @Override
             public void fail(Exception e) {

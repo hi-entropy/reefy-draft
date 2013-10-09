@@ -9,32 +9,32 @@ import org.reefy.transportrest.api.Value;
  * @author Paul Kernfeld - pk@knewton.com
  */
 public interface TransportClient<C extends Contact> extends Service {
-    public void find(C contact, Key key, FindCallback callback);
+    public void find(C contact, Key key, FindCallback<C> callback);
 
-    public void get(C contact, Key key, GetCallback callback);
+    public void get(C contact, Key key, GetCallback<C> callback);
 
     public void put(C contact, Key key, Value value, PutCallback callback);
 
-    public static interface FindCallback {
+    public static interface FindCallback<C extends Contact> {
         public void succeed();
 
-        void redirect(Contact contact);
+        void redirect(C contact);
     }
 
-    public static interface GetCallback {
+    public static interface GetCallback<C extends Contact> {
         public void present(Value value);
 
-        void redirect(Contact contact);
+        void redirect(C contact);
 
         public void notFound();
 
         public void fail(TransportException exception);
     }
 
-    public static interface PutCallback {
+    public static interface PutCallback<C extends Contact> {
         public void succeed();
 
-        void redirect(Contact contact);
+        void redirect(C contact);
 
         public void fail(TransportException exception);
     }
