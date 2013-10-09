@@ -23,9 +23,10 @@ public abstract class AbstractTransportTest<C extends Contact> {
     private final TransportFactory<C> transportFactory;
 
     // Just use a random key and constant value
-    private final Key testKey = RawKey.pseudorandom();
+    private final RawKey testKey = RawKey.pseudorandom();
     private final String message = "test";
     private final Value testValue = new RawValue(message.getBytes());
+    private final C redirectContact;
 
     private class GetPresentAppServerHandler implements AppServerHandler<C> {
         @Override
@@ -41,7 +42,7 @@ public abstract class AbstractTransportTest<C extends Contact> {
         public void get(Key key, GetCallback<C> callback) {
             Assert.assertEquals(testKey, key);
 
-            callback.redirect(transportFactory.buildMockContact());
+            callback.redirect(redirectContact);
         }
     }
 
@@ -65,6 +66,7 @@ public abstract class AbstractTransportTest<C extends Contact> {
 
     protected AbstractTransportTest(TransportFactory<C> transportFactory) {
         this.transportFactory = transportFactory;
+        redirectContact = transportFactory.buildMockContact();
     }
 
     @Test
@@ -98,6 +100,41 @@ public abstract class AbstractTransportTest<C extends Contact> {
             }
         });
     }
+
+    @Test
+    public void testGetRedirect() {
+        final TransportClient<C> client = transportFactory.buildClient();
+        final TransportFactory.ServerWhatever<C> serverWhatever =
+                transportFactory.buildServer(new GetRedirectAppServerHandler());
+        serverWhatever.getServer().startAndWait();
+
+        client.get(serverWhatever.getContact(), testKey, new TransportClient.GetCallback<C>() {
+            @Override
+            public void present(Value value) {
+                Assert.fail("Get succeeded: " + value);
+            }
+
+            @Override
+            public void redirect(C contact) {
+                // Succeed
+                // TODO: latches
+                Assert.assertEquals(redirectContact, contact);
+                client.stopAndWait();
+            }
+
+            @Override
+            public void notFound() {
+                Assert.fail("Key not found.");
+            }
+
+            @Override
+            public void fail(TransportException exception) {
+                Assert.fail("Get failed: " + exception.getMessage());
+            }
+        });
+    }
+
+
 
     @Test
     public void testGetNotFound() {

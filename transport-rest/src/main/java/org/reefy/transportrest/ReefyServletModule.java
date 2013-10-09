@@ -9,6 +9,6 @@ public class ReefyServletModule extends ServletModule {
 
     @Override
     protected void configureServlets() {
-        serve("*.html").with(WhateverServlet.class);
+        serve("*.html").with(RestTransportServlet.class);
     }
 }

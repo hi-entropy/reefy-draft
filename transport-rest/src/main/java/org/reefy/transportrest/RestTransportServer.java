@@ -1,5 +1,6 @@
 package org.reefy.transportrest;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.AbstractService;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -33,7 +34,7 @@ public class RestTransportServer extends AbstractService implements TransportSer
         ServletContextHandler servletContextHandler = new ServletContextHandler();
         servletContextHandler.setContextPath("/");
 
-        servletContextHandler.addServlet(new ServletHolder(new WhateverServlet(appServerHandler)), "/*");
+        servletContextHandler.addServlet(new ServletHolder(new RestTransportServlet(appServerHandler)), "/*");
 
         FilterHolder guiceFilter = new FilterHolder(injector.getInstance(GuiceFilter.class));
         servletContextHandler.addFilter(guiceFilter, "/*", EnumSet.allOf(DispatcherType.class));

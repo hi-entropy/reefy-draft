@@ -1,5 +1,8 @@
 package org.reefy.transportrest;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.reefy.transportrest.api.AbstractContact;
 import org.reefy.transportrest.api.Key;
 import org.reefy.transportrest.api.RawKey;
@@ -13,7 +16,11 @@ public class RestContact extends AbstractContact {
     private final String ipAddress;
     private final int port;
 
-    public RestContact(Key key, String ipAddress, int port) {
+    public RestContact(
+            @JsonProperty("key") Key key,
+            @JsonProperty("ipAddress") String ipAddress,
+            @JsonProperty("port") int port
+    ) {
         super(key);
         this.ipAddress = ipAddress;
         this.port = port;
@@ -27,8 +34,23 @@ public class RestContact extends AbstractContact {
         return port;
     }
 
-    public static RestContact fromString(String string) {
-        // TODO(PK): Implement this method
-        return new RestContact(RawKey.pseudorandom(), "", -1);
+    @Override
+    public int hashCode() {
+        // TODO: make this
+        return super.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) { return false; }
+        if (obj == this) { return true; }
+        if (obj.getClass() != getClass()) { return false; }
+
+        final RestContact restContact = (RestContact) obj;
+        return new EqualsBuilder()
+                .appendSuper(super.equals(obj))
+                .append(ipAddress, restContact.ipAddress)
+                .append(port, restContact.port)
+                .isEquals();
     }
 }

@@ -163,27 +163,6 @@
       <!--<artifactId>jersey-json</artifactId>-->
       <!--<version>${dep.jersey}</version>-->
       <!--</dependency>-->
-
-      <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-core</artifactId>
-        <version>${dep.jackson}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-databind</artifactId>
-        <version>${dep.jackson}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-annotations</artifactId>
-        <version>${dep.jackson}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.fasterxml.jackson.jaxrs</groupId>
-        <artifactId>jackson-jaxrs-json-provider</artifactId>
-        <version>${dep.jackson}</version>
-      </dependency>
     </dependencies>
 
   <!-- Common properties -->
@@ -198,8 +177,6 @@
     <dep.guice>3.0</dep.guice>
     <dep.jersey>1.12</dep.jersey>
     <dep.jetty>7.6.2.v20120308</dep.jetty>
-
-    <dep.jackson>2.0.0</dep.jackson>
 
     <version.httpcomponents>4.3</version.httpcomponents>
 

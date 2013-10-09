@@ -1,5 +1,6 @@
 package org.reefy.transportrest;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.AbstractIdleService;
 
@@ -32,6 +33,8 @@ public class RestTransportClient
 
     private static final String API_VERSION = "0";
 
+    private static final ObjectMapper mapper = new ObjectMapper();
+
     @Override
      protected void startUp() throws Exception {
          //To change body of implemented methods use File | Settings | File Templates.
@@ -48,14 +51,14 @@ public class RestTransportClient
      }
 
      @Override
-     public void get(RestContact contact, Key key, GetCallback callback) {
+     public void get(RestContact contact, Key key, GetCallback<RestContact> callback) {
          // TODO: Make sure this doesn't have security holes
          final URI uri = UriBuilder.fromPath("http://{ip}:{port}/{version}/{key}")
                                    .buildFromEncodedMap(ImmutableMap.of(
                                        "ip", contact .getIpAddress(),
                                        "port", contact.getPort(),
                                        "version", API_VERSION,
-                                       "key", printHexBinary(contact.getKey().getBytes().array())
+                                       "key", printHexBinary(contact.getKey().getBytes())
                                    ));
          final HttpGet httpPost = new HttpGet(uri.toString());
 
@@ -75,13 +78,13 @@ public class RestTransportClient
 
              // Success getting the value
              if (statusCode == HttpServletResponse.SC_OK) {
-                 callback.present(new RawValue(parseHexBinary(EntityUtils.toString((entity2)))));
+                 callback.present(new RawValue(parseHexBinary(EntityUtils.toString(entity2))));
                  return;
              }
 
              // Redirect
              if (statusCode == HttpServletResponse.SC_MOVED_PERMANENTLY) {
-                 callback.redirect(RestContact.fromString(EntityUtils.toString(entity2)));
+                 callback.redirect(mapper.readValue(EntityUtils.toString(entity2), RestContact.class));
                  return;
              }
 

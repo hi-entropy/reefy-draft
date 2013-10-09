@@ -28,7 +28,7 @@ public class AbstractContact implements Contact {
     public boolean equals(Object obj) {
         if (obj == null) { return false; }
         if (obj == this) { return true; }
-        if (! (obj instanceof AbstractContact)) { return false; }
+        if (obj.getClass() != getClass()) { return false; }
 
         return this.key.equals(((AbstractContact) obj).key);
     }

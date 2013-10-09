@@ -3,6 +3,7 @@ package org.reefy.transportrest;
 /**
  * @author Paul Kernfeld - pk@knewton.com
  */
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.reefy.transportrest.api.AppServerHandler;
 import org.reefy.transportrest.api.Key;
 import org.reefy.transportrest.api.RawKey;
@@ -18,11 +19,13 @@ import java.io.IOException;
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
 
-public class WhateverServlet<C extends Contact> extends HttpServlet {
+public class RestTransportServlet<C extends Contact> extends HttpServlet {
+
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     private final AppServerHandler<C> appServerHandler;
 
-    public WhateverServlet(AppServerHandler<C> appServerHandler) {
+    public RestTransportServlet(AppServerHandler<C> appServerHandler) {
         this.appServerHandler = appServerHandler;
     }
 
@@ -51,7 +54,12 @@ public class WhateverServlet<C extends Contact> extends HttpServlet {
             @Override
             public void redirect(C contact) {
                 resp.setStatus(HttpServletResponse.SC_MOVED_PERMANENTLY);
-                // TODO: put the contact into the message
+                try {
+                    resp.getWriter().append(mapper.writeValueAsString(contact));
+                } catch (IOException e) {
+                    // TODO: log this I guess?
+                    e.printStackTrace();
+                }
             }
 
             @Override

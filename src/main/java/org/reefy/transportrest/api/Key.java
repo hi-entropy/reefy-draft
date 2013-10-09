@@ -7,12 +7,12 @@ import org.reefy.transportrest.api.store.Store;
 import java.nio.ByteBuffer;
 
 /**
- * This represents a piece of data that can be stored on a single machine.
+ * This represents a piece of bytes that can be stored on a single machine.
  *
  * @author Paul Kernfeld - pk@knewton.com
  */
 public interface Key {
-    public ByteBuffer getBytes();
+    public byte[] getBytes();
 
 //    public ListenableFuture<V> get(Store store);
 //

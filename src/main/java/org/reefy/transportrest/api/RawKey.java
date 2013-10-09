@@ -1,18 +1,11 @@
 package org.reefy.transportrest.api;
 
-import com.google.common.base.Preconditions;
-import com.google.common.util.concurrent.AbstractFuture;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
-
-import org.reefy.transportrest.api.store.Store;
-import org.reefy.transportrest.api.store.StoreException;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.reefy.transportrest.api.transport.Contact;
 
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Map;
 import java.util.Random;
 
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
@@ -38,33 +31,28 @@ public class RawKey implements Key {
     }
 
     public static RawKey pseudorandom() {
-        final byte[] data = new byte[20];
-        new Random().nextBytes(data);
-        return new RawKey(data);
+        final byte[] bytes = new byte[20];
+        new Random().nextBytes(bytes);
+        return new RawKey(bytes);
     }
 
-    public final ByteBuffer data;
+    // TODO: this should be immutable.
+    public final byte[] bytes;
 
-    public RawKey(ByteBuffer data) {
-        Preconditions.checkArgument(data.limit() == 20);
-        this.data = ByteBuffer.allocate(20);
-        this.data.put(data.array());
-    }
-
-    public RawKey(byte[] data) {
-        this(ByteBuffer.allocate(20).put(data));
+    public RawKey(@JsonProperty("bytes") byte[] bytes) {
+        this.bytes = Arrays.copyOf(bytes, 20);
     }
 
     @Override
-    public ByteBuffer getBytes() {
-        return data;
+    public byte[] getBytes() {
+        return bytes;
     }
 
     // Hamming/XOR/Manhattan distance
     @Override
     public int distance(Key otherKey) {
-        final int[] myInts = data.asIntBuffer().array();
-        final int[] otherInts = otherKey.getBytes().asIntBuffer().array();
+        final int[] myInts = ByteBuffer.allocate(20).put(this.bytes).asIntBuffer().array();
+        final int[] otherInts = ByteBuffer.allocate(20).put(otherKey.getBytes()).asIntBuffer().array();
 
         int distance = 0;
         for (int i = 0; i < 5; i++) {
@@ -75,20 +63,20 @@ public class RawKey implements Key {
 
     @Override
     public int hashCode() {
-        return data.hashCode();
+        return bytes.hashCode();
     }
 
     @Override
     public boolean equals(Object obj) {
         if (obj == null) { return false; }
         if (obj == this) { return true; }
-        if (! (obj instanceof Key)) { return false; }
+        if (obj.getClass() != getClass()) { return false; }
 
-        return this.data.equals(((Key) obj).getBytes());
+        return Arrays.equals(bytes, ((RawKey) obj).bytes);
     }
 
     @Override
     public String toString() {
-        return printHexBinary(data.array());
+        return printHexBinary(bytes);
     }
 }
