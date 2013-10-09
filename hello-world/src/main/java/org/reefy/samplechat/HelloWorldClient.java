@@ -7,6 +7,7 @@ import org.reefy.transportrest.api.*;
 import org.reefy.transportrest.api.transport.TransportClient;
 import org.reefy.transportrest.api.transport.local.LocalContact;
 import org.reefy.transportrest.api.transport.local.LocalTransportClient;
+import org.reefy.transportrest.api.transport.local.LocalTransportServer;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -21,7 +22,7 @@ import static org.joda.time.Duration.standardMinutes;
 public class HelloWorldClient extends AbstractIdleService {
 
     public static void main(String[] args) throws IOException {
-        ConcurrentMap<LocalContact, AppServer> contactsToServers = Maps.newConcurrentMap();
+        ConcurrentMap<LocalContact, LocalTransportServer> contactsToServers = Maps.newConcurrentMap();
         final TransportClient transportClient = new LocalTransportClient(contactsToServers);
         final SimpleAppClient simpleAppClient = new SimpleAppClient(transportClient);
         final HelloWorldClient helloWorldClient = new HelloWorldClient(simpleAppClient);
