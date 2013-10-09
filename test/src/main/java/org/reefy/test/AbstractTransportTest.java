@@ -109,4 +109,44 @@ public abstract class AbstractTransportTest<C extends Contact> {
             }
         });
     }
+
+    private class GetFailAppServerHandler implements AppServerHandler {
+        @Override
+        public void get(Key key, GetCallback callback) {
+            Assert.assertEquals(testKey, key);
+
+            callback.fail(new Exception("test exception"));
+        }
+    }
+
+    @Test
+    public void testGetFail() {
+        final TransportClient<C> client = transportFactory.buildClient();
+        final TransportFactory.ServerWhatever<C> serverWhatever =
+            transportFactory.buildServer(new GetFailAppServerHandler());
+        serverWhatever.getServer().startAndWait();
+
+        client.get(serverWhatever.getContact(), testKey, new TransportClient.GetCallback() {
+            @Override
+            public void present(Value value) {
+                Assert.fail("Value retrieved: " + value);
+            }
+
+            @Override
+            public void redirect(Contact contact) {
+                Assert.fail("Redirected to " + contact);
+            }
+
+            @Override
+            public void notFound() {
+                Assert.fail("Key not found");
+            }
+
+            @Override
+            public void fail(TransportException exception) {
+                // Succeed
+                client.stopAndWait();
+            }
+        });
+    }
 }
