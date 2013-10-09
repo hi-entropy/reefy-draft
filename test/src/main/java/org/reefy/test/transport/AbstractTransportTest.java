@@ -1,7 +1,8 @@
-package org.reefy.test;
+package org.reefy.test.transport;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.reefy.test.TransportFactory;
 import org.reefy.transportrest.api.AbstractContact;
 import org.reefy.transportrest.api.AppServerHandler;
 import org.reefy.transportrest.api.Key;

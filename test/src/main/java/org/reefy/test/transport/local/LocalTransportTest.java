@@ -1,5 +1,6 @@
-package org.reefy.test;
+package org.reefy.test.transport.local;
 
+import org.reefy.test.transport.AbstractTransportTest;
 import org.reefy.transportrest.api.transport.local.LocalContact;
 
 /**

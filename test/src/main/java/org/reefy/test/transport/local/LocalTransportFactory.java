@@ -1,6 +1,8 @@
-package org.reefy.test;
+package org.reefy.test.transport.local;
 
 import com.google.common.collect.Maps;
+import org.reefy.test.AbstractTransportServerWhatever;
+import org.reefy.test.TransportFactory;
 import org.reefy.transportrest.api.AppServer;
 import org.reefy.transportrest.api.AppServerHandler;
 import org.reefy.transportrest.api.Key;

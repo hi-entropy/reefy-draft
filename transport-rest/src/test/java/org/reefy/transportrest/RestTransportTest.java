@@ -1,6 +1,6 @@
 package org.reefy.transportrest;
 
-import org.reefy.test.AbstractTransportTest;
+import org.reefy.test.transport.AbstractTransportTest;
 
 /**
  * @author Paul Kernfeld <hi-entropy@gmail.com>
