@@ -25,6 +25,7 @@ public class LocalContactTest {
         assertThat(contact3, is(contact1));
 
         // Probability of equality is infinitesimal
-        assertThat(contact1, is(not(contact2)));
+        assertThat(contact1, not(contact2));
+        assertThat(contact2, not(contact1));
     }
 }

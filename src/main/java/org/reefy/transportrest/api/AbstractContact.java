@@ -1,7 +1,5 @@
 package org.reefy.transportrest.api;
 
-import com.google.common.base.Objects;
-import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.reefy.transportrest.api.transport.Contact;
 
 /**
@@ -28,8 +26,15 @@ public class AbstractContact implements Contact {
     public boolean equals(Object obj) {
         if (obj == null) { return false; }
         if (obj == this) { return true; }
-        if (obj.getClass() != getClass()) { return false; }
+        if (! (obj instanceof Contact)) { return false; }
 
-        return this.key.equals(((AbstractContact) obj).key);
+        return this.key.equals(((Contact) obj).getKey());
+    }
+
+    @Override
+    public String toString() {
+        return "AbstractContact{" +
+               "key=" + key +
+               '}';
     }
 }

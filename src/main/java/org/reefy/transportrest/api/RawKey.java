@@ -1,6 +1,7 @@
 package org.reefy.transportrest.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import org.reefy.transportrest.api.transport.Contact;
 
 import java.nio.ByteBuffer;
@@ -19,6 +20,8 @@ import static javax.xml.bind.DatatypeConverter.printHexBinary;
  */
 public class RawKey implements Key {
 
+    private static final Random random = new Random();
+
     public static Comparator<Contact> distanceComparator(final Key key) {
         return new Comparator<Contact>() {
             @Override
@@ -32,7 +35,7 @@ public class RawKey implements Key {
 
     public static RawKey pseudorandom() {
         final byte[] bytes = new byte[20];
-        new Random().nextBytes(bytes);
+        random.nextBytes(bytes);
         return new RawKey(bytes);
     }
 
@@ -51,8 +54,8 @@ public class RawKey implements Key {
     // Hamming/XOR/Manhattan distance
     @Override
     public int distance(Key otherKey) {
-        final int[] myInts = ByteBuffer.allocate(20).put(this.bytes).asIntBuffer().array();
-        final int[] otherInts = ByteBuffer.allocate(20).put(otherKey.getBytes()).asIntBuffer().array();
+        final int[] myInts = ByteBuffer.wrap(bytes).asIntBuffer().array();
+        final int[] otherInts = ByteBuffer.wrap(otherKey.getBytes()).asIntBuffer().array();
 
         int distance = 0;
         for (int i = 0; i < 5; i++) {
@@ -63,16 +66,16 @@ public class RawKey implements Key {
 
     @Override
     public int hashCode() {
-        return bytes.hashCode();
+        return Arrays.hashCode(bytes);
     }
 
     @Override
     public boolean equals(Object obj) {
         if (obj == null) { return false; }
         if (obj == this) { return true; }
-        if (obj.getClass() != getClass()) { return false; }
+        if (! (obj instanceof Key)) { return false; }
 
-        return Arrays.equals(bytes, ((RawKey) obj).bytes);
+        return Arrays.equals(bytes, ((Key) obj).getBytes());
     }
 
     @Override

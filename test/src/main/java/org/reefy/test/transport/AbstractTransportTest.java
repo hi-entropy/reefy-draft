@@ -15,6 +15,8 @@ import org.reefy.transportrest.api.transport.TransportException;
 import org.reefy.transportrest.api.transport.ValueNotFoundException;
 
 import java.util.Random;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Paul Kernfeld - pk@knewton.com
@@ -28,6 +30,24 @@ public abstract class AbstractTransportTest<C extends Contact> {
     private final String message = "test";
     private final Value testValue = new RawValue(message.getBytes());
     private final C redirectContact;
+    private static final int LATCH_TIMEOUT = 1000;
+
+    /**
+     * When the server receives a request, count down the latch.
+     */
+    private class LatchAppServerHandler implements AppServerHandler<C> {
+
+        private final CountDownLatch latch;
+
+        public LatchAppServerHandler(CountDownLatch latch) {
+            this.latch = latch;
+        }
+
+        @Override
+        public void get(Key key, GetCallback callback) {
+            latch.countDown();
+        }
+    }
 
     private class GetPresentAppServerHandler implements AppServerHandler<C> {
         @Override
@@ -68,6 +88,44 @@ public abstract class AbstractTransportTest<C extends Contact> {
     protected AbstractTransportTest(TransportFactory<C> transportFactory) {
         this.transportFactory = transportFactory;
         redirectContact = transportFactory.buildMockContact();
+    }
+
+    /**
+     * Just ensure that the right server receives a request send by the client.
+     */
+    @Test
+    public void testServerReceivesRequest() throws InterruptedException {
+        final TransportClient<C> client = transportFactory.buildClient();
+        final CountDownLatch latch = new CountDownLatch(1);
+        final TransportFactory.ServerWhatever<C> serverWhatever =
+            transportFactory.buildServer(new LatchAppServerHandler(latch));
+        serverWhatever.getServer().startAndWait();
+
+        client.get(serverWhatever.getContact(), testKey, new TransportClient.GetCallback<C>() {
+            @Override
+            public void present(Value value) {
+                Assert.fail("Get unexpectedly succeeded: " + value);
+            }
+
+            @Override
+            public void redirect(C contact) {
+                Assert.fail("Redirected to " + contact);
+            }
+
+            @Override
+            public void notFound() {
+                Assert.fail("Key not found.");
+            }
+
+            @Override
+            public void fail(TransportException exception) {
+                Assert.fail("Get failed: " + exception.getMessage());
+            }
+        });
+
+        latch.await(LATCH_TIMEOUT, TimeUnit.MILLISECONDS);
+
+        client.stopAndWait();
     }
 
     @Test
