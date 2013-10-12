@@ -2,16 +2,23 @@ package org.reefy.transportrest;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.reefy.transportrest.api.AbstractContact;
 import org.reefy.transportrest.api.Key;
 import org.reefy.transportrest.api.RawKey;
 import org.reefy.transportrest.api.transport.Contact;
 
+import javax.ws.rs.core.UriBuilder;
+import java.io.Serializable;
+import java.net.URI;
+
 /**
  * @author Paul Kernfeld <hi-entropy@gmail.com>
  */
 public class RestContact extends AbstractContact {
+
+    private static final String REST_API_VERSION = "0";
 
     private final String ipAddress;
     private final int port;
@@ -32,6 +39,16 @@ public class RestContact extends AbstractContact {
 
     public int getPort() {
         return port;
+    }
+
+    public URI toUrl(String request) {
+        return UriBuilder.fromPath("http://{ip}:{port}/{version}/{request}")
+                .buildFromEncodedMap(ImmutableMap.of(
+                        "ip", ipAddress,
+                        "port", port,
+                        "version", REST_API_VERSION,
+                        "request", request
+                ));
     }
 
     @Override

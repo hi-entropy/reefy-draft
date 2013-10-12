@@ -1,5 +1,6 @@
 package org.reefy.test.transport;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.reefy.test.TransportFactory;
@@ -56,7 +57,7 @@ public abstract class AbstractTransportTest<C extends Contact> {
 
         @Override
         public void fail(TransportException exception) {
-            Assert.fail("Get unexpectedly failed: " + exception.getMessage());
+            Assert.fail("Get unexpectedly failed: " + exception.getMessage() + ExceptionUtils.getStackTrace(exception));
         }
     }
 

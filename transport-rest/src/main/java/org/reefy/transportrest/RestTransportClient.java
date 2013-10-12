@@ -31,9 +31,7 @@ import static javax.xml.bind.DatatypeConverter.printHexBinary;
 public class RestTransportClient
      extends AbstractIdleService implements TransportClient<RestContact> {
 
-    private static final String API_VERSION = "0";
-
-    private static final ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper mapper = new ObjectMapper().enableDefaultTyping();
 
     @Override
      protected void startUp() throws Exception {
@@ -53,19 +51,14 @@ public class RestTransportClient
      @Override
      public void get(RestContact contact, Key key, GetCallback<RestContact> callback) {
          // TODO: Make sure this doesn't have security holes
-         final URI uri = UriBuilder.fromPath("http://{ip}:{port}/{version}/{key}")
-                                   .buildFromEncodedMap(ImmutableMap.of(
-                                       "ip", contact .getIpAddress(),
-                                       "port", contact.getPort(),
-                                       "version", API_VERSION,
-                                       "key", printHexBinary(key.getBytes())
-                                   ));
-         final HttpGet httpPost = new HttpGet(uri.toString());
+         final String request = printHexBinary(key.getBytes());
+         final HttpGet httpGet = new HttpGet(contact.toUrl(request));
 
-         final CloseableHttpClient httpClient = HttpClients.createDefault();
+         // Don't follow redirects automatically, we need to do it manually.
+         final CloseableHttpClient httpClient = HttpClients.custom().disableRedirectHandling().build();
          CloseableHttpResponse response2 = null;
          try {
-             response2 = httpClient.execute(httpPost);
+             response2 = httpClient.execute(httpGet);
          } catch (IOException e) {
              callback.fail(new TransportException(e));
              return;

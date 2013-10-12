@@ -19,13 +19,13 @@ import java.io.IOException;
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
 
-public class RestTransportServlet<C extends Contact> extends HttpServlet {
+public class RestTransportServlet extends HttpServlet {
 
-    private static final ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper mapper = new ObjectMapper().enableDefaultTyping();
 
-    private final AppServerHandler<C> appServerHandler;
+    private final AppServerHandler<RestContact> appServerHandler;
 
-    public RestTransportServlet(AppServerHandler<C> appServerHandler) {
+    public RestTransportServlet(AppServerHandler<RestContact> appServerHandler) {
         this.appServerHandler = appServerHandler;
     }
 
@@ -39,7 +39,8 @@ public class RestTransportServlet<C extends Contact> extends HttpServlet {
         final int length = req.getRequestURI().length();
         final String keyHex = req.getRequestURI().substring(length - 40, length);
         final Key key = new RawKey(parseHexBinary(keyHex));
-        appServerHandler.get(key, new AppServerHandler.GetCallback<C>() {
+        final String request = req.getRequestURI().substring(length - 40, length);
+        appServerHandler.get(key, new AppServerHandler.GetCallback<RestContact>() {
             @Override
             public void present(Value value) {
                 resp.setStatus(HttpServletResponse.SC_OK);
@@ -52,8 +53,9 @@ public class RestTransportServlet<C extends Contact> extends HttpServlet {
             }
 
             @Override
-            public void redirect(C contact) {
+            public void redirect(RestContact contact) {
                 resp.setStatus(HttpServletResponse.SC_MOVED_PERMANENTLY);
+                resp.setHeader("Location", resp.encodeRedirectUrl(contact.toUrl(request).toString()));
                 try {
                     resp.getWriter().append(mapper.writeValueAsString(contact));
                 } catch (IOException e) {
