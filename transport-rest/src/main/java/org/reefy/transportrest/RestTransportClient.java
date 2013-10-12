@@ -58,7 +58,7 @@ public class RestTransportClient
                                        "ip", contact .getIpAddress(),
                                        "port", contact.getPort(),
                                        "version", API_VERSION,
-                                       "key", printHexBinary(contact.getKey().getBytes())
+                                       "key", printHexBinary(key.getBytes())
                                    ));
          final HttpGet httpPost = new HttpGet(uri.toString());
 

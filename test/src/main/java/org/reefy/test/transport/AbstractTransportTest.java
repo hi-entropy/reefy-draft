@@ -33,6 +33,34 @@ public abstract class AbstractTransportTest<C extends Contact> {
     private static final int LATCH_TIMEOUT = 1000;
 
     /**
+     * This class can be used by itself, or extended in cases where we want a callback where most results should cause
+     * the test to fail.
+     *
+     * @param <C> the type of Contact to use
+     */
+    private static class failTransportClientGetCallback<C extends Contact> implements TransportClient.GetCallback<C> {
+        @Override
+        public void present(Value value) {
+            Assert.fail("Get unexpectedly succeeded: " + value);
+        }
+
+        @Override
+        public void redirect(C contact) {
+            Assert.fail("Unexpectedly redirected to: " + contact);
+        }
+
+        @Override
+        public void notFound() {
+            Assert.fail("Key unexpectedly not found");
+        }
+
+        @Override
+        public void fail(TransportException exception) {
+            Assert.fail("Get unexpectedly failed: " + exception.getMessage());
+        }
+    }
+
+    /**
      * When the server receives a request, count down the latch.
      */
     private class LatchAppServerHandler implements AppServerHandler<C> {
@@ -46,6 +74,7 @@ public abstract class AbstractTransportTest<C extends Contact> {
         @Override
         public void get(Key key, GetCallback callback) {
             latch.countDown();
+            callback.notFound();
         }
     }
 
@@ -101,25 +130,11 @@ public abstract class AbstractTransportTest<C extends Contact> {
             transportFactory.buildServer(new LatchAppServerHandler(latch));
         serverWhatever.getServer().startAndWait();
 
-        client.get(serverWhatever.getContact(), testKey, new TransportClient.GetCallback<C>() {
-            @Override
-            public void present(Value value) {
-                Assert.fail("Get unexpectedly succeeded: " + value);
-            }
-
-            @Override
-            public void redirect(C contact) {
-                Assert.fail("Redirected to " + contact);
-            }
-
+        client.get(serverWhatever.getContact(), testKey, new failTransportClientGetCallback<C>() {
             @Override
             public void notFound() {
-                Assert.fail("Key not found.");
-            }
-
-            @Override
-            public void fail(TransportException exception) {
-                Assert.fail("Get failed: " + exception.getMessage());
+                // Test succeeded
+                serverWhatever.getServer().stopAndWait();
             }
         });
 
@@ -135,27 +150,12 @@ public abstract class AbstractTransportTest<C extends Contact> {
             transportFactory.buildServer(new GetPresentAppServerHandler());
         serverWhatever.getServer().startAndWait();
 
-        client.get(serverWhatever.getContact(), testKey, new TransportClient.GetCallback<C>() {
+        client.get(serverWhatever.getContact(), testKey, new failTransportClientGetCallback<C>() {
             @Override
             public void present(Value value) {
                 // Succeed
                 Assert.assertEquals(testValue, value);
                 client.stopAndWait();
-            }
-
-            @Override
-            public void redirect(C contact) {
-                Assert.fail("Redirected to " + contact);
-            }
-
-            @Override
-            public void notFound() {
-                Assert.fail("Key not found.");
-            }
-
-            @Override
-            public void fail(TransportException exception) {
-                Assert.fail("Get failed: " + exception.getMessage());
             }
         });
     }
@@ -167,28 +167,13 @@ public abstract class AbstractTransportTest<C extends Contact> {
                 transportFactory.buildServer(new GetRedirectAppServerHandler());
         serverWhatever.getServer().startAndWait();
 
-        client.get(serverWhatever.getContact(), testKey, new TransportClient.GetCallback<C>() {
-            @Override
-            public void present(Value value) {
-                Assert.fail("Get succeeded: " + value);
-            }
-
+        client.get(serverWhatever.getContact(), testKey, new failTransportClientGetCallback<C>() {
             @Override
             public void redirect(C contact) {
                 // Succeed
                 // TODO: latches
                 Assert.assertEquals(redirectContact, contact);
                 client.stopAndWait();
-            }
-
-            @Override
-            public void notFound() {
-                Assert.fail("Key not found.");
-            }
-
-            @Override
-            public void fail(TransportException exception) {
-                Assert.fail("Get failed: " + exception.getMessage());
             }
         });
     }
@@ -202,27 +187,11 @@ public abstract class AbstractTransportTest<C extends Contact> {
             transportFactory.buildServer(new GetNotFoundAppServerHandler());
         serverWhatever.getServer().startAndWait();
 
-        client.get(serverWhatever.getContact(), testKey, new TransportClient.GetCallback<C>() {
-            @Override
-            public void present(Value value) {
-                Assert.fail("Value retrieved: " + value);
-
-            }
-
-            @Override
-            public void redirect(C contact) {
-                Assert.fail("Redirected to " + contact);
-            }
-
+        client.get(serverWhatever.getContact(), testKey, new failTransportClientGetCallback<C>() {
             @Override
             public void notFound() {
                 // Succeed
                 client.stopAndWait();
-            }
-
-            @Override
-            public void fail(TransportException exception) {
-                Assert.fail("Get failed: " + exception.getMessage());
             }
         });
     }
@@ -234,22 +203,7 @@ public abstract class AbstractTransportTest<C extends Contact> {
             transportFactory.buildServer(new GetFailAppServerHandler());
         serverWhatever.getServer().startAndWait();
 
-        client.get(serverWhatever.getContact(), testKey, new TransportClient.GetCallback<C>() {
-            @Override
-            public void present(Value value) {
-                Assert.fail("Value retrieved: " + value);
-            }
-
-            @Override
-            public void redirect(Contact contact) {
-                Assert.fail("Redirected to " + contact);
-            }
-
-            @Override
-            public void notFound() {
-                Assert.fail("Key not found");
-            }
-
+        client.get(serverWhatever.getContact(), testKey, new failTransportClientGetCallback<C>() {
             @Override
             public void fail(TransportException exception) {
                 // Succeed

@@ -22,6 +22,11 @@ public class RawKey implements Key {
 
     private static final Random random = new Random();
 
+    /**
+     * Orders distances from smallest to largest.
+     * @param key
+     * @return
+     */
     public static Comparator<Contact> distanceComparator(final Key key) {
         return new Comparator<Contact>() {
             @Override
@@ -42,13 +47,20 @@ public class RawKey implements Key {
     // TODO: this should be immutable.
     public final byte[] bytes;
 
+    /**
+     * Make a defensive copy; the key is NOT backed by the input, it's copied.
+     * @param bytes
+     */
     public RawKey(@JsonProperty("bytes") byte[] bytes) {
         this.bytes = Arrays.copyOf(bytes, 20);
     }
 
+    /**
+     * @return a defensive copy. You never know these days.
+     */
     @Override
     public byte[] getBytes() {
-        return bytes;
+        return Arrays.copyOf(bytes, 20);
     }
 
     // Hamming/XOR/Manhattan distance
