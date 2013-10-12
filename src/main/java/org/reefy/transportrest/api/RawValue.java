@@ -1,7 +1,7 @@
 package org.reefy.transportrest.api;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Random;
 
 /**
@@ -13,15 +13,15 @@ import java.util.Random;
  */
 public class RawValue implements Value {
 
-    private final ByteBuffer data;
+    private final byte[] bytes;
 
-    public RawValue(byte[] data) {
-        this.data = ByteBuffer.wrap(data);
+    public RawValue(byte[] bytes) {
+        this.bytes = Arrays.copyOf(bytes, bytes.length);
     }
 
     @Override
-    public ByteBuffer getBytes() {
-        return data;
+    public byte[] getBytes() {
+        return Arrays.copyOf(bytes, bytes.length);
     }
 
     public static RawValue pseudorandom(int length) {
@@ -32,7 +32,7 @@ public class RawValue implements Value {
 
     @Override
     public int hashCode() {
-        return data.hashCode();
+        return bytes.hashCode();
     }
 
     @Override
@@ -41,11 +41,11 @@ public class RawValue implements Value {
         if (obj == this) { return true; }
         if (! (obj instanceof Value)) { return false; }
 
-        return this.data.equals(((Value) obj).getBytes());
+        return Arrays.equals(bytes, (((Value) obj).getBytes()));
     }
 
     @Override
     public String toString() {
-        return new String(data.array(), Charset.forName("ISO-8859-1"));
+        return new String(bytes, StandardCharsets.ISO_8859_1);
     }
 }

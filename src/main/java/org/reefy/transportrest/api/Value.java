@@ -14,5 +14,5 @@ public interface Value<V> {
     /**
      * Should be read-only
      */
-    public ByteBuffer getBytes();
+    public byte[] getBytes();
 }
