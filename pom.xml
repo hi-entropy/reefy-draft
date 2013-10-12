@@ -35,7 +35,6 @@
     <modules>
         <module>hello-world</module>
         <module>test</module>
-        <module>sample-chat</module>
         <module>transport-rest</module>
     </modules>
 
