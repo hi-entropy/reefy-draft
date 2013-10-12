@@ -1,5 +1,7 @@
 package org.reefy.storesqlite;
 
+import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.AbstractIdleService;
 import org.reefy.transportrest.api.Key;
 import org.reefy.transportrest.api.RawKey;
 import org.reefy.transportrest.api.RawValue;
@@ -11,12 +13,12 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
 
-public class SqliteStore implements Store {
+public class SqliteStore extends AbstractIdleService implements Store {
 
     public volatile Connection connection = null;
 
-    // TODO: This might be bad for perf
-    private synchronized void initialize() throws StoreException {
+    @Override
+    protected void startUp() throws Exception {
         // create a database connection
         if (connection == null) {
             try {
@@ -36,9 +38,19 @@ public class SqliteStore implements Store {
     }
 
     @Override
-    public synchronized void clear() throws StoreException {
+    protected void shutDown() throws Exception {
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            // Swallow this probably
+            // TODO: log
+        }
+    }
 
-        initialize();
+    // TODO: Synchronizing everything might be bad for perf
+    @Override
+    public synchronized void clear() throws StoreException {
+        Preconditions.checkState(isRunning(), "Sqlite store service is not running.");
 
         try
         {
@@ -56,12 +68,7 @@ public class SqliteStore implements Store {
 
     @Override
     public synchronized <V> void put(Key key, Value<V> value, PutCallback<V> callback) {
-        try {
-            initialize();
-        } catch (StoreException e) {
-            callback.fail(e);
-            return;
-        }
+        Preconditions.checkState(isRunning(), "Sqlite store service is not running.");
 
         try {
             final PreparedStatement putStatement = connection.prepareStatement("insert into keys values(?, ?)");
@@ -76,23 +83,8 @@ public class SqliteStore implements Store {
     }
 
     @Override
-    public synchronized void close() {
-        try {
-            connection.close();
-        } catch (SQLException e) {
-            // Swallow this probably
-            // TODO: log
-        }
-    }
-
-    @Override
     public synchronized <V> void get(Key key, GetCallback<V> callback) {
-        try {
-            initialize();
-        } catch (StoreException e) {
-            callback.fail(e);
-            return;
-        }
+        Preconditions.checkState(isRunning(), "Sqlite store service is not running.");
 
         try {
             Statement statement = connection.createStatement();

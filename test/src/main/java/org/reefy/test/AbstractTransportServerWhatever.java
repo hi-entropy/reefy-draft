@@ -1,6 +1,6 @@
 package org.reefy.test;
 
-import org.reefy.transportrest.api.TransportServer;
+import org.reefy.transportrest.api.transport.TransportServer;
 import org.reefy.transportrest.api.transport.Contact;
 
 /**

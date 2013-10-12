@@ -1,17 +1,16 @@
 package org.reefy.transportrest.api.store;
 
+import com.google.common.util.concurrent.Service;
 import org.reefy.transportrest.api.Key;
 import org.reefy.transportrest.api.Value;
 
 /**
  * @author Paul Kernfeld - pk@knewton.com
  */
-public interface Store {
+public interface Store extends Service {
     public void clear() throws StoreException;
 
     public <V> void put(Key key, Value<V> value, PutCallback<V> callback);
-
-    void close();
 
     public static interface PutCallback<V> {
         public void succeed();

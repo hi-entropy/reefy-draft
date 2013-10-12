@@ -1,11 +1,5 @@
 package org.reefy.test;
 
-import org.reefy.transportrest.api.TransportServer;
-import org.reefy.transportrest.api.transport.TransportClient;
-import org.reefy.transportrest.api.transport.local.LocalContact;
-
-import java.util.Map;
-
 /**
  * @author Paul Kernfeld <hi-entropy@gmail.com>
  */

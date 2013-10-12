@@ -1,4 +1,4 @@
-package org.reefy.transportrest.api;
+package org.reefy.transportrest.api.transport;
 
 import com.google.common.util.concurrent.Service;
 

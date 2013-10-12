@@ -5,7 +5,6 @@ import org.reefy.test.TransportFactory;
 import org.reefy.transportrest.api.AppServerHandler;
 import org.reefy.transportrest.api.Key;
 import org.reefy.transportrest.api.RawKey;
-import org.reefy.transportrest.api.TransportServer;
 import org.reefy.transportrest.api.transport.TransportClient;
 
 import java.util.Random;

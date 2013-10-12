@@ -1,8 +1,9 @@
 package org.reefy.storesqlite;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.hamcrest.Matcher;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.reefy.transportrest.api.Key;
 import org.reefy.transportrest.api.RawKey;
@@ -11,8 +12,6 @@ import org.reefy.transportrest.api.Value;
 import org.reefy.transportrest.api.store.Store;
 import org.reefy.transportrest.api.store.StoreException;
 
-import java.nio.charset.StandardCharsets;
-import java.sql.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -23,12 +22,19 @@ import static org.junit.Assert.assertThat;
  * @author Paul Kernfeld <hi-entropy@gmail.com>
  */
 public class SqliteStoreTest {
-    @Test
-    public void testPutGet() throws InterruptedException, StoreException {
-        final Store store = new SqliteStore();
 
+    private Store store;
+
+    @Before
+    public void setUp() throws StoreException {
+        store = new SqliteStore();
+
+        store.startAndWait();
         store.clear();
+    }
 
+    @Test
+    public void testPutGet() throws InterruptedException {
         final CountDownLatch latch = new CountDownLatch(1);
 
         final Key testKey = RawKey.pseudorandom();
@@ -65,5 +71,10 @@ public class SqliteStoreTest {
 
 
         latch.await(5000, TimeUnit.MILLISECONDS);
+    }
+
+    @After
+    public void tearDown() {
+        store.stopAndWait();
     }
 }

@@ -35,6 +35,19 @@
         </dependency>
 
         <dependency>
+            <groupId>org.reefy</groupId>
+            <artifactId>transport-rest</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.reefy</groupId>
+            <artifactId>store-sqlite</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+
+
+        <dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
             <version>2.3</version>

@@ -3,10 +3,8 @@ package org.reefy.transportrest.api.transport.local;
 import com.google.common.util.concurrent.AbstractIdleService;
 
 import org.reefy.transportrest.api.AppServerHandler;
-import org.reefy.transportrest.api.TransportServer;
+import org.reefy.transportrest.api.transport.TransportServer;
 import org.reefy.transportrest.api.transport.Contact;
-
-import javax.swing.*;
 
 /**
  * @author Paul Kernfeld - pk@knewton.com

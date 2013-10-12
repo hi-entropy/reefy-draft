@@ -116,4 +116,8 @@ public class SimpleAppClient extends AbstractIdleService implements AppClient {
     protected void shutDown() throws Exception {
         transport.stopAndWait();
     }
+
+    public void addContact(Contact contact) {
+        contacts.add(contact);
+    }
 }

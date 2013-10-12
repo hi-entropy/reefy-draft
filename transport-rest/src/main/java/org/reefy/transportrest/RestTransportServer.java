@@ -1,6 +1,5 @@
 package org.reefy.transportrest;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.AbstractService;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -12,7 +11,7 @@ import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.reefy.transportrest.api.AppServerHandler;
-import org.reefy.transportrest.api.TransportServer;
+import org.reefy.transportrest.api.transport.TransportServer;
 
 import java.util.EnumSet;
 
