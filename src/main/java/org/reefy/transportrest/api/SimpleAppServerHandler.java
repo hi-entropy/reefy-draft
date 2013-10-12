@@ -21,6 +21,12 @@ public class SimpleAppServerHandler implements AppServerHandler {
             }
 
             @Override
+            public void notFound() {
+                // TODO: maybe redirect
+                callback.notFound();
+            }
+
+            @Override
             public void fail(StoreException e) {
                 callback.fail(e);
             }

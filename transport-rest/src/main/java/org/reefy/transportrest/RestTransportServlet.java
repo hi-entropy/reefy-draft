@@ -45,7 +45,7 @@ public class RestTransportServlet extends HttpServlet {
             public void present(Value value) {
                 resp.setStatus(HttpServletResponse.SC_OK);
                 try {
-                    resp.getWriter().append(printHexBinary(value.getBytes().array()));
+                    resp.getWriter().append(printHexBinary(value.getBytes()));
                 } catch (IOException e) {
                     // TODO: log this I guess?
                     e.printStackTrace();

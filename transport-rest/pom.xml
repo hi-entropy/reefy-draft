@@ -120,13 +120,6 @@
       </dependency>
 
       <dependency>
-        <groupId>org.easymock</groupId>
-        <artifactId>easymock</artifactId>
-        <version>${dep.easymock}</version>
-        <scope>test</scope>
-      </dependency>
-
-      <dependency>
         <groupId>javax.servlet</groupId>
         <artifactId>servlet-api</artifactId>
         <version>2.5</version>
@@ -172,7 +165,6 @@
     <dep.slf4j>1.6.4</dep.slf4j>
     <dep.logback>1.0.1</dep.logback>
     <dep.junit>4.10</dep.junit>
-    <dep.easymock>3.0</dep.easymock>
 
     <dep.guice>3.0</dep.guice>
     <dep.jersey>1.12</dep.jersey>

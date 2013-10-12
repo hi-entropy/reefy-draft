@@ -1,11 +1,20 @@
 package org.reefy.storesqlite;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.hamcrest.Matcher;
+import org.junit.Assert;
+import org.junit.Test;
+import org.reefy.transportrest.api.Key;
 import org.reefy.transportrest.api.RawKey;
 import org.reefy.transportrest.api.RawValue;
 import org.reefy.transportrest.api.Value;
+import org.reefy.transportrest.api.store.Store;
+import org.reefy.transportrest.api.store.StoreException;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -14,59 +23,47 @@ import static org.junit.Assert.assertThat;
  * @author Paul Kernfeld <hi-entropy@gmail.com>
  */
 public class SqliteStoreTest {
-    public static void main(String[] args) throws ClassNotFoundException {
-        // load the sqlite-JDBC driver using the current class loader
-        Class.forName("org.sqlite.JDBC");
+    @Test
+    public void testPutGet() throws InterruptedException, StoreException {
+        final Store store = new SqliteStore();
 
-        Connection connection = null;
-        try
-        {
-            // create a database connection
-            connection = DriverManager.getConnection("jdbc:sqlite:sample.db");
-            Statement statement = connection.createStatement();
+        store.clear();
 
-            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+        final CountDownLatch latch = new CountDownLatch(1);
 
-            statement.executeUpdate("drop table if exists keys");
-            statement.executeUpdate("create table keys (key char(20), value blob)");
+        final Key testKey = RawKey.pseudorandom();
+        final Value testValue = RawValue.pseudorandom(20);
 
-            final PreparedStatement preparedStatement = connection.prepareStatement("insert into keys values(?, ?)");
-            final RawKey rawKey = RawKey.pseudorandom();
-            final Value value = RawValue.pseudorandom(10);
-            preparedStatement.setBytes(1, rawKey.getBytes());
-            preparedStatement.setBytes(2, value.getBytes());
-            preparedStatement.execute();
+        store.put(testKey, testValue, new Store.PutCallback() {
+            @Override
+            public void succeed() {
+                store.get(testKey, new Store.GetCallback<Object>() {
+                    @Override
+                    public void succeed(Value<Object> value) {
+                        assertThat(value, is(testValue));
 
-            final ResultSet rs = statement.executeQuery("select * from keys");
-            while(rs.next())
-            {
-                // read the result set
-                final RawKey retrieved = new RawKey(rs.getBytes("key"));
-                System.out.println("key = " + retrieved);
-                assertThat(retrieved, is(rawKey));
-                System.out.println("value = " + new String(rs.getBytes("value"), StandardCharsets.ISO_8859_1));
-                assertThat(new RawValue(rs.getBytes("value")), is(value));
+                        latch.countDown();
+                    }
 
+                    @Override
+                    public void notFound() {
+                        Assert.fail("Key not found");
+                    }
+
+                    @Override
+                    public void fail(StoreException e) {
+                        Assert.fail(ExceptionUtils.getStackTrace(e));
+                    }
+                });
             }
-        }
-        catch(SQLException e)
-        {
-            // if the error message is "out of memory",
-            // it probably means no database file is found
-            System.err.println(e.getMessage());
-        }
-        finally
-        {
-            try
-            {
-                if(connection != null)
-                    connection.close();
+
+            @Override
+            public void fail(StoreException e) {
+                Assert.fail(ExceptionUtils.getStackTrace(e));
             }
-            catch(SQLException e)
-            {
-                // connection close failed.
-                System.err.println(e);
-            }
-        }
+        });
+
+
+        latch.await(5000, TimeUnit.MILLISECONDS);
     }
 }

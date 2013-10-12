@@ -7,5 +7,12 @@ package org.reefy.transportrest.api.store;
  * Time: 9:57 PM
  * To change this template use File | Settings | File Templates.
  */
-public abstract class StoreException extends Exception {
+public class StoreException extends Exception {
+    public StoreException(String message) {
+        super(message);
+    }
+
+    public StoreException(Throwable e) {
+        super(e);
+    }
 }

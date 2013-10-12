@@ -9,6 +9,11 @@ import org.reefy.transportrest.api.Value;
 public class InMemoryStore implements Store {
 
     @Override
+    public void clear() throws StoreException {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
     public <V> void put(Key key, Value<V> value, PutCallback<V> callback) {
     }
 

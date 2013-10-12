@@ -7,6 +7,8 @@ import org.reefy.transportrest.api.Value;
  * @author Paul Kernfeld - pk@knewton.com
  */
 public interface Store {
+    public void clear() throws StoreException;
+
     public <V> void put(Key key, Value<V> value, PutCallback<V> callback);
 
     void close();
@@ -21,6 +23,8 @@ public interface Store {
 
     public static interface GetCallback<V> {
         public void succeed(Value<V> value);
+
+        public void notFound();
 
         public void fail(StoreException e);
     }
