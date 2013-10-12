@@ -34,6 +34,7 @@
 
     <modules>
         <module>hello-world</module>
+        <module>store-sqlite</module>
         <module>test</module>
         <module>transport-rest</module>
     </modules>
