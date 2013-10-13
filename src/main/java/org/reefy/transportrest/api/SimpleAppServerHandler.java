@@ -13,6 +13,20 @@ public class SimpleAppServerHandler implements AppServerHandler {
         this.store = store;
     }
 
+    public void put(Key key, Value value, final PutCallback callback) {
+            store.put(key, value, new Store.PutCallback() {
+                @Override
+                public void succeed() {
+                    callback.succeed();
+                }
+
+                @Override
+                public void fail(StoreException e) {
+                    callback.fail(e);
+                }
+            });
+    }
+
     public void get(Key key, final GetCallback callback) {
         store.get(key, new Store.GetCallback() {
             @Override

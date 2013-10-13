@@ -4,7 +4,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.reefy.test.TransportFactory;
-import org.reefy.transportrest.api.AbstractContact;
 import org.reefy.transportrest.api.AppServerHandler;
 import org.reefy.transportrest.api.Key;
 import org.reefy.transportrest.api.RawKey;
@@ -13,11 +12,12 @@ import org.reefy.transportrest.api.Value;
 import org.reefy.transportrest.api.transport.Contact;
 import org.reefy.transportrest.api.transport.TransportClient;
 import org.reefy.transportrest.api.transport.TransportException;
-import org.reefy.transportrest.api.transport.ValueNotFoundException;
 
-import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Paul Kernfeld - pk@knewton.com
@@ -27,11 +27,24 @@ public abstract class AbstractTransportTest<C extends Contact> {
     private final TransportFactory<C> transportFactory;
 
     // Just use a random key and constant value
-    private final RawKey testKey = RawKey.pseudorandom();
+    private final Key testKey = RawKey.pseudorandom();
     private final String message = "test";
     private final Value testValue = new RawValue(message.getBytes());
     private final C redirectContact;
     private static final int LATCH_TIMEOUT = 1000;
+
+    private static class NoopAppServerHandler<C extends Contact> implements AppServerHandler<C> {
+
+        @Override
+        public void put(Key key, Value value, PutCallback<C> callback) {
+            // Do nothing
+        }
+
+        @Override
+        public void get(Key key, GetCallback<C> callback) {
+            // Do nothing
+        }
+    }
 
     /**
      * This class can be used by itself, or extended in cases where we want a callback where most results should cause
@@ -39,7 +52,32 @@ public abstract class AbstractTransportTest<C extends Contact> {
      *
      * @param <C> the type of Contact to use
      */
-    private static class failTransportClientGetCallback<C extends Contact> implements TransportClient.GetCallback<C> {
+    private static class FailTransportClientPutCallback<C extends Contact> implements TransportClient.PutCallback<C> {
+
+
+        @Override
+        public void succeed() {
+            Assert.fail("Put unexpectedly succeeded");
+        }
+
+        @Override
+        public void redirect(C contact) {
+            Assert.fail("Put unexpectedly redirected to: " + contact);
+        }
+
+        @Override
+        public void fail(TransportException exception) {
+            Assert.fail("Put unexpectedly failed: " + exception.getMessage() + ExceptionUtils.getStackTrace(exception));
+        }
+    }
+
+    /**
+     * This class can be used by itself, or extended in cases where we want a callback where most results should cause
+     * the test to fail.
+     *
+     * @param <C> the type of Contact to use
+     */
+    private static class FailTransportClientGetCallback<C extends Contact> implements TransportClient.GetCallback<C> {
         @Override
         public void present(Value value) {
             Assert.fail("Get unexpectedly succeeded: " + value);
@@ -64,7 +102,7 @@ public abstract class AbstractTransportTest<C extends Contact> {
     /**
      * When the server receives a request, count down the latch.
      */
-    private class LatchAppServerHandler implements AppServerHandler<C> {
+    private class LatchAppServerHandler extends NoopAppServerHandler<C> {
 
         private final CountDownLatch latch;
 
@@ -79,39 +117,49 @@ public abstract class AbstractTransportTest<C extends Contact> {
         }
     }
 
-    private class GetPresentAppServerHandler implements AppServerHandler<C> {
+    private class PutFailAppServerHandler extends NoopAppServerHandler<C> {
+        @Override
+        public void put(Key key, Value value, PutCallback callback) {
+            assertThat(key, is(testKey));
+            assertThat(value, is(testValue));
+
+            callback.fail(new Exception("mock exception"));
+        }
+    }
+
+    private class GetPresentAppServerHandler extends NoopAppServerHandler<C> {
         @Override
         public void get(Key key, GetCallback<C> callback) {
-            Assert.assertEquals(testKey, key);
+            assertThat(key, is(testKey));
 
             callback.present(testValue);
         }
     }
 
-    private class GetRedirectAppServerHandler implements AppServerHandler<C> {
+    private class GetRedirectAppServerHandler extends NoopAppServerHandler<C> {
         @Override
         public void get(Key key, GetCallback<C> callback) {
-            Assert.assertEquals(testKey, key);
+            assertThat(key, is(testKey));
 
             callback.redirect(redirectContact);
         }
     }
 
-    private class GetNotFoundAppServerHandler implements AppServerHandler<C> {
+    private class GetNotFoundAppServerHandler extends NoopAppServerHandler<C> {
         @Override
         public void get(Key key, GetCallback callback) {
-            Assert.assertEquals(testKey, key);
+            assertThat(key, is(testKey));
 
             callback.notFound();
         }
     }
 
-    private class GetFailAppServerHandler implements AppServerHandler<C> {
+    private class GetFailAppServerHandler extends NoopAppServerHandler<C> {
         @Override
         public void get(Key key, GetCallback callback) {
-            Assert.assertEquals(testKey, key);
+            assertThat(key, is(testKey));
 
-            callback.fail(new Exception("test exception"));
+            callback.fail(new Exception("mock exception"));
         }
     }
 
@@ -131,7 +179,7 @@ public abstract class AbstractTransportTest<C extends Contact> {
             transportFactory.buildServer(new LatchAppServerHandler(latch));
         serverWhatever.getServer().startAndWait();
 
-        client.get(serverWhatever.getContact(), testKey, new failTransportClientGetCallback<C>() {
+        client.get(serverWhatever.getContact(), testKey, new FailTransportClientGetCallback<C>() {
             @Override
             public void notFound() {
                 // Test succeeded
@@ -145,13 +193,29 @@ public abstract class AbstractTransportTest<C extends Contact> {
     }
 
     @Test
+    public void testPutFail() {
+        final TransportClient<C> client = transportFactory.buildClient();
+        final TransportFactory.ServerWhatever<C> serverWhatever =
+                transportFactory.buildServer(new PutFailAppServerHandler());
+        serverWhatever.getServer().startAndWait();
+
+        client.put(serverWhatever.getContact(), testKey, testValue, new FailTransportClientPutCallback() {
+            @Override
+            public void fail(TransportException exception) {
+                // Succeed
+                client.stopAndWait();
+            }
+        });
+    }
+
+    @Test
     public void testGetPresent() {
         final TransportClient<C> client = transportFactory.buildClient();
         final TransportFactory.ServerWhatever<C> serverWhatever =
             transportFactory.buildServer(new GetPresentAppServerHandler());
         serverWhatever.getServer().startAndWait();
 
-        client.get(serverWhatever.getContact(), testKey, new failTransportClientGetCallback<C>() {
+        client.get(serverWhatever.getContact(), testKey, new FailTransportClientGetCallback<C>() {
             @Override
             public void present(Value value) {
                 // Succeed
@@ -168,7 +232,7 @@ public abstract class AbstractTransportTest<C extends Contact> {
                 transportFactory.buildServer(new GetRedirectAppServerHandler());
         serverWhatever.getServer().startAndWait();
 
-        client.get(serverWhatever.getContact(), testKey, new failTransportClientGetCallback<C>() {
+        client.get(serverWhatever.getContact(), testKey, new FailTransportClientGetCallback<C>() {
             @Override
             public void redirect(C contact) {
                 // Succeed
@@ -188,7 +252,7 @@ public abstract class AbstractTransportTest<C extends Contact> {
             transportFactory.buildServer(new GetNotFoundAppServerHandler());
         serverWhatever.getServer().startAndWait();
 
-        client.get(serverWhatever.getContact(), testKey, new failTransportClientGetCallback<C>() {
+        client.get(serverWhatever.getContact(), testKey, new FailTransportClientGetCallback<C>() {
             @Override
             public void notFound() {
                 // Succeed
@@ -204,7 +268,7 @@ public abstract class AbstractTransportTest<C extends Contact> {
             transportFactory.buildServer(new GetFailAppServerHandler());
         serverWhatever.getServer().startAndWait();
 
-        client.get(serverWhatever.getContact(), testKey, new failTransportClientGetCallback<C>() {
+        client.get(serverWhatever.getContact(), testKey, new FailTransportClientGetCallback<C>() {
             @Override
             public void fail(TransportException exception) {
                 // Succeed
