@@ -117,6 +117,26 @@ public abstract class AbstractTransportTest<C extends Contact> {
         }
     }
 
+    private class PutSucceedAppServerHandler extends NoopAppServerHandler<C> {
+        @Override
+        public void put(Key key, Value value, PutCallback callback) {
+            assertThat(key, is(testKey));
+            assertThat(value, is(testValue));
+
+            callback.succeed();
+        }
+    }
+
+    private class PutRedirectAppServerHandler extends NoopAppServerHandler<C> {
+        @Override
+        public void put(Key key, Value value, PutCallback<C> callback) {
+            assertThat(key, is(testKey));
+            assertThat(value, is(testValue));
+
+            callback.redirect(redirectContact);
+        }
+    }
+
     private class PutFailAppServerHandler extends NoopAppServerHandler<C> {
         @Override
         public void put(Key key, Value value, PutCallback callback) {
@@ -190,6 +210,38 @@ public abstract class AbstractTransportTest<C extends Contact> {
         latch.await(LATCH_TIMEOUT, TimeUnit.MILLISECONDS);
 
         client.stopAndWait();
+    }
+
+    @Test
+    public void testPutSucceed() {
+        final TransportClient<C> client = transportFactory.buildClient();
+        final TransportFactory.ServerWhatever<C> serverWhatever =
+                transportFactory.buildServer(new PutFailAppServerHandler());
+        serverWhatever.getServer().startAndWait();
+
+        client.put(serverWhatever.getContact(), testKey, testValue, new FailTransportClientPutCallback() {
+            @Override
+            public void fail(TransportException exception) {
+                // Succeed
+                client.stopAndWait();
+            }
+        });
+    }
+
+    @Test
+    public void testPutRedirect() {
+        final TransportClient<C> client = transportFactory.buildClient();
+        final TransportFactory.ServerWhatever<C> serverWhatever =
+                transportFactory.buildServer(new PutFailAppServerHandler());
+        serverWhatever.getServer().startAndWait();
+
+        client.put(serverWhatever.getContact(), testKey, testValue, new FailTransportClientPutCallback() {
+            @Override
+            public void fail(TransportException exception) {
+                // Succeed
+                client.stopAndWait();
+            }
+        });
     }
 
     @Test
