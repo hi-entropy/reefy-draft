@@ -31,6 +31,35 @@ public class LocalTransportClient extends AbstractService implements TransportCl
     }
 
     @Override
+    public void put(LocalContact contact, Key key, Value value, final PutCallback callback) {
+        final LocalTransportServer server = contactsToServers.get(contact);
+
+        if (server == null) {
+            callback.fail(new ContactNotFoundException());
+            return;
+        }
+
+        final AppServerHandler<LocalContact> appServerHandler = server.getAppServerHandler();
+        appServerHandler.put(key, value, new AppServerHandler.PutCallback<LocalContact>() {
+            @Override
+            public void succeed() {
+                callback.succeed();
+            }
+
+            @Override
+            public void redirect(LocalContact contact) {
+                callback.redirect(contact);
+            }
+
+
+            @Override
+            public void fail(Exception e) {
+                callback.fail(new TransportException(e));
+            }
+        });
+    }
+
+    @Override
     public void get(LocalContact contact, Key key, final GetCallback<LocalContact> callback) {
         final LocalTransportServer server = contactsToServers.get(contact);
 
@@ -62,11 +91,6 @@ public class LocalTransportClient extends AbstractService implements TransportCl
                 callback.fail(new TransportException(e));
             }
         });
-    }
-
-    @Override
-    public void put(LocalContact contact, Key key, Value value, PutCallback callback) {
-        //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override

@@ -26,6 +26,45 @@ public class SimpleAppClient extends AbstractIdleService implements AppClient {
     }
 
     @Override
+    public void put(final Key key, final Value value, final Duration duration, final PutCallback callback) {
+        if (contacts.isEmpty()) {
+            callback.fail(new NoContactsException());
+            return;
+        }
+
+        final ArrayList<Contact> contactsSorted = new ArrayList<Contact>(contacts);
+        Collections.sort(contactsSorted, RawKey.distanceComparator(key));
+
+        // This is sketchy...
+        final TransportClient.PutCallback putter = new TransportClient.PutCallback() {
+            volatile int nTimesCalled = 0;
+
+            @Override
+            public void succeed() {
+                callback.succeed();
+            }
+
+            // Keep trying until we find the right server
+            @Override
+            public void redirect(Contact contact) {
+                ++nTimesCalled;
+                if (nTimesCalled <= MAX_N_HOPS) {
+                    transport.put(contact, key, value, this);
+                } else {
+                    callback.fail(new HopsExceededException());
+                }
+            }
+
+            @Override
+            public void fail(TransportException exception) {
+                callback.fail(exception);
+            }
+        };
+
+        putter.redirect(contactsSorted.get(0));
+    }
+
+    @Override
     public void get(final Key key, final GetCallback callback) {
         if (contacts.isEmpty()) {
             callback.fail(new NoContactsException());
@@ -66,45 +105,6 @@ public class SimpleAppClient extends AbstractIdleService implements AppClient {
         };
 
         getter.redirect(contactsSorted.get(0));
-    }
-
-    @Override
-    public void put(final Key key, final Value value, final Duration duration, final PutCallback callback) {
-        if (contacts.isEmpty()) {
-            callback.fail(new NoContactsException());
-            return;
-        }
-
-        final ArrayList<Contact> contactsSorted = new ArrayList<Contact>(contacts);
-        Collections.sort(contactsSorted, RawKey.distanceComparator(key));
-
-        // This is sketchy...
-        final TransportClient.PutCallback putter = new TransportClient.PutCallback() {
-            volatile int nTimesCalled = 0;
-
-            @Override
-            public void succeed() {
-                callback.succeed();
-            }
-
-            // Keep trying until we find the right server
-            @Override
-            public void redirect(Contact contact) {
-                ++nTimesCalled;
-                if (nTimesCalled <= MAX_N_HOPS) {
-                    transport.put(contact, key, value, this);
-                } else {
-                    callback.fail(new HopsExceededException());
-                }
-            }
-
-            @Override
-            public void fail(TransportException exception) {
-                callback.fail(exception);
-            }
-        };
-
-        putter.redirect(contactsSorted.get(0));
     }
 
     @Override
