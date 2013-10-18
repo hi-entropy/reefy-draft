@@ -2,6 +2,7 @@ package org.reefy.transportrest.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import com.google.common.base.Preconditions;
 import org.reefy.transportrest.api.transport.Contact;
 
 import java.nio.ByteBuffer;
@@ -52,6 +53,8 @@ public class RawKey implements Key {
      * @param bytes
      */
     public RawKey(@JsonProperty("bytes") byte[] bytes) {
+        Preconditions.checkNotNull(bytes);
+        Preconditions.checkArgument(bytes.length == 20, "Incoming array length should be 20, not " + bytes.length);
         this.bytes = Arrays.copyOf(bytes, 20);
     }
 

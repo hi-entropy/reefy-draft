@@ -1,8 +1,10 @@
 package org.reefy.transportrest;
 
 import com.google.common.util.concurrent.AbstractService;
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.TypeLiteral;
 import com.google.inject.servlet.GuiceFilter;
 
 import org.eclipse.jetty.server.DispatcherType;
@@ -24,18 +26,26 @@ public class RestTransportServer extends AbstractService implements TransportSer
 
     private final Server server;
 
-    public RestTransportServer(RestContact restContact, AppServerHandler appServerHandler) {
+    public RestTransportServer(RestContact restContact, final AppServerHandler appServerHandler) {
         this.restContact = restContact;
-
-        final Injector injector = Guice.createInjector();
 
         server = new Server(restContact.getPort());
         ServletContextHandler servletContextHandler = new ServletContextHandler();
         servletContextHandler.setContextPath("/");
 
-        servletContextHandler.addServlet(new ServletHolder(new RestTransportServlet(appServerHandler)), "/*");
+        //servletContextHandler.addServlet(new ServletHolder(new RestTransportServlet(appServerHandler)), "/*");
+        servletContextHandler.addServlet(new ServletHolder(new NotFoundServlet()), "/*");
 
-        FilterHolder guiceFilter = new FilterHolder(injector.getInstance(GuiceFilter.class));
+        final Injector injector = Guice.createInjector(new ReefyServletModule(), new AbstractModule() {
+            @Override
+            protected void configure() {
+                binder().requireExplicitBindings();
+                bind(GuiceFilter.class);
+                bind(new TypeLiteral<AppServerHandler<RestContact>>() {}).toInstance(appServerHandler);
+            }
+        });
+
+        final FilterHolder guiceFilter = new FilterHolder(injector.getInstance(GuiceFilter.class));
         servletContextHandler.addFilter(guiceFilter, "/*", EnumSet.allOf(DispatcherType.class));
 
         server.setHandler(servletContextHandler);

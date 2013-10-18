@@ -51,7 +51,8 @@ public class RestTransportClient
      @Override
      public void get(RestContact contact, Key key, GetCallback<RestContact> callback) {
          // TODO: Make sure this doesn't have security holes
-         final String request = printHexBinary(key.getBytes());
+         // TODO: This is probably not the best way to compose this URL
+         final String request = "key/" + printHexBinary(key.getBytes());
          final HttpGet httpGet = new HttpGet(contact.toUrl(request));
 
          // Don't follow redirects automatically, we need to do it manually.
@@ -107,6 +108,6 @@ public class RestTransportClient
 
      @Override
      public void put(RestContact contact, Key key, Value value, PutCallback callback) {
-         //To change body of implemented methods use File | Settings | File Templates.
+
      }
  }
