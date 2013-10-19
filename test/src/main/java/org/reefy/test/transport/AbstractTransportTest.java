@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -216,14 +217,14 @@ public abstract class AbstractTransportTest<C extends Contact> {
     public void testPutSucceed() throws InterruptedException {
         final TransportClient<C> client = transportFactory.buildClient();
         final TransportFactory.ServerWhatever<C> serverWhatever =
-                transportFactory.buildServer(new PutFailAppServerHandler());
+                transportFactory.buildServer(new PutSucceedAppServerHandler());
         serverWhatever.getServer().startAndWait();
 
         final CountDownLatch latch = new CountDownLatch(1);
 
         client.put(serverWhatever.getContact(), testKey, testValue, new FailTransportClientPutCallback() {
             @Override
-            public void fail(TransportException exception) {
+            public void succeed() {
                 // Succeed
                 latch.countDown();
                 client.stopAndWait();
@@ -237,14 +238,16 @@ public abstract class AbstractTransportTest<C extends Contact> {
     public void testPutRedirect() throws InterruptedException {
         final TransportClient<C> client = transportFactory.buildClient();
         final TransportFactory.ServerWhatever<C> serverWhatever =
-                transportFactory.buildServer(new PutFailAppServerHandler());
+                transportFactory.buildServer(new PutRedirectAppServerHandler());
         serverWhatever.getServer().startAndWait();
 
         final CountDownLatch latch = new CountDownLatch(1);
 
-        client.put(serverWhatever.getContact(), testKey, testValue, new FailTransportClientPutCallback() {
+        client.put(serverWhatever.getContact(), testKey, testValue, new FailTransportClientPutCallback<C>() {
             @Override
-            public void fail(TransportException exception) {
+            public void redirect(C redirect) {
+                assertEquals(redirect, redirectContact);
+
                 // Succeed
                 latch.countDown();
                 client.stopAndWait();

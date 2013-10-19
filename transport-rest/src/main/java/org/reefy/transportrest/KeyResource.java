@@ -3,14 +3,13 @@ package org.reefy.transportrest;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
-import org.reefy.transportrest.api.AppServerHandler;
-import org.reefy.transportrest.api.Key;
-import org.reefy.transportrest.api.RawKey;
+import org.reefy.transportrest.api.*;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.net.URI;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -33,6 +32,54 @@ public class KeyResource {
     @Inject
     public KeyResource(AppServerHandler<RestContact> appServerHandler) {
         this.appServerHandler = appServerHandler;
+    }
+
+
+    // TODO: this should not return Object
+    @PUT
+    public Response handleFooPut(final @PathParam("key") String keyHex, final @FormParam("value") String valueString) throws InterruptedException, ExecutionException, TimeoutException, IOException {
+        final Key key;
+        try {
+            key = new RawKey(parseHexBinary(keyHex));
+        } catch (Exception e) {
+            throw new WebApplicationException(
+                    e,
+                    Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build()
+            );
+        }
+        final Value value = new RawValue(valueString.getBytes());
+
+        // TODO: wrap value/contact in some AppServerHandlerResponse POJO
+        // TODO: make this async
+        final AppServerHandler.PutResponse<RestContact> putResponse =
+                appServerHandler.put(key, value).get(10000, TimeUnit.MILLISECONDS);
+
+        if (putResponse.succeeded()) {
+            // TODO: use a real URI
+            return Response.created(URI.create("fakeuri")).build();
+        }
+
+        if (putResponse.redirected() != null) {
+            final RestContact contact = putResponse.redirected();
+
+            // TODO: this is an ugly way to do a redirect
+            final String request = "put/" + keyHex;
+            // TODO: not encoding this url opens us up to a URL-splitting vulnerability. also elsewhere?
+            // TODO: don't throw an IOException, we can probably actually guarantee that there will be no JSON error
+            return Response.status(Response.Status.MOVED_PERMANENTLY)
+                    .header("Location", contact.toUrl(request).toString())
+                    .entity(mapper.writeValueAsString(contact))
+                    .build();
+        }
+
+        if (putResponse.failed() != null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(putResponse.failed().getMessage())
+                    .build();
+        }
+
+        throw new AssertionError("unreachable case");
+
     }
 
     // TODO: this should not return Object
