@@ -1,5 +1,6 @@
-package org.reefy.test;
+package org.reefy.test.transport;
 
+import org.reefy.test.transport.TransportFactory;
 import org.reefy.transportrest.api.transport.TransportServer;
 import org.reefy.transportrest.api.transport.Contact;
 

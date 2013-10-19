@@ -6,9 +6,9 @@ import org.reefy.transportrest.api.store.Store;
 /**
  * @author Paul Kernfeld <hi-entropy@gmail.com>
  */
-public class InMemoryStoreTest extends AbstractStoreTest {
+public class InMemoryStoreTestOld extends AbstractStoreTestOld {
 
-    public InMemoryStoreTest() {
+    public InMemoryStoreTestOld() {
         super(new StoreFactory() {
             @Override
             public Store build() {

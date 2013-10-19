@@ -12,12 +12,12 @@ import java.util.concurrent.CountDownLatch;
 /**
  * @author Paul Kernfeld <hi-entropy@gmail.com>
  */
-public abstract class AbstractStoreTest {
+public abstract class AbstractStoreTestOld {
 
     public static final int VALUE_SIZE = 8;
     private final StoreFactory storeFactory;
 
-    protected AbstractStoreTest(StoreFactory storeFactory) {
+    protected AbstractStoreTestOld(StoreFactory storeFactory) {
         this.storeFactory = storeFactory;
     }
 

@@ -1,4 +1,4 @@
-package org.reefy.test;
+package org.reefy.test.transport;
 
 import org.reefy.transportrest.api.AppServerHandler;
 import org.reefy.transportrest.api.transport.TransportServer;

@@ -3,14 +3,10 @@ package org.reefy.test;
 import org.joda.time.Duration;
 import org.junit.Assert;
 import org.junit.Test;
+import org.reefy.test.transport.TransportFactory;
 import org.reefy.transportrest.api.*;
 import org.reefy.transportrest.api.transport.Contact;
 import org.reefy.transportrest.api.transport.TransportClient;
-import org.reefy.transportrest.api.transport.TransportException;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.Map;
 
 /**
  * @author Paul Kernfeld - pk@knewton.com

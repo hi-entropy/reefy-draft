@@ -5,7 +5,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.junit.Assert;
 import org.junit.Test;
-import org.reefy.test.TransportFactory;
 import org.reefy.transportrest.api.*;
 import org.reefy.transportrest.api.transport.Contact;
 import org.reefy.transportrest.api.transport.TransportClient;
