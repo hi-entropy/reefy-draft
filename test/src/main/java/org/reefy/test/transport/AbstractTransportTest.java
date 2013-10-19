@@ -1,24 +1,25 @@
 package org.reefy.test.transport;
 
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.reefy.test.TransportFactory;
-import org.reefy.transportrest.api.AppServerHandler;
-import org.reefy.transportrest.api.Key;
-import org.reefy.transportrest.api.RawKey;
-import org.reefy.transportrest.api.RawValue;
-import org.reefy.transportrest.api.Value;
+import org.reefy.transportrest.api.*;
 import org.reefy.transportrest.api.transport.Contact;
 import org.reefy.transportrest.api.transport.TransportClient;
 import org.reefy.transportrest.api.transport.TransportException;
+import org.reefy.transportrest.api.transport.ValueNotFoundException;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 /**
  * @author Paul Kernfeld - pk@knewton.com
@@ -33,17 +34,20 @@ public abstract class AbstractTransportTest<C extends Contact> {
     private final Value testValue = new RawValue(message.getBytes());
     private final C redirectContact;
     private static final int LATCH_TIMEOUT = 1000;
+    private final Exception testException = new Exception("mock exception");
 
     private static class NoopAppServerHandler<C extends Contact> implements AppServerHandler<C> {
 
         @Override
-        public void put(Key key, Value value, PutCallback<C> callback) {
+        public ListenableFuture<PutResponse<C>> put(Key key, Value value) {
             // Do nothing
+            return null;
         }
 
         @Override
-        public void get(Key key, GetCallback<C> callback) {
+        public ListenableFuture<GetResponse<C>> get(Key key) {
             // Do nothing
+            return null;
         }
     }
 
@@ -90,11 +94,6 @@ public abstract class AbstractTransportTest<C extends Contact> {
         }
 
         @Override
-        public void notFound() {
-            Assert.fail("Key unexpectedly not found");
-        }
-
-        @Override
         public void fail(TransportException exception) {
             Assert.fail("Get unexpectedly failed: " + exception.getMessage() + ExceptionUtils.getStackTrace(exception));
         }
@@ -112,75 +111,77 @@ public abstract class AbstractTransportTest<C extends Contact> {
         }
 
         @Override
-        public void get(Key key, GetCallback callback) {
+        public ListenableFuture<GetResponse<C>> get(Key key) {
             latch.countDown();
-            callback.notFound();
+
+            // Arbitrarily return succeeded
+            return Futures.immediateFuture(AbstractAppServerHandler.<C>succeedGetResponse(testValue));
         }
     }
 
     private class PutSucceedAppServerHandler extends NoopAppServerHandler<C> {
         @Override
-        public void put(Key key, Value value, PutCallback callback) {
+        public ListenableFuture<PutResponse<C>> put(Key key, Value value) {
             assertThat(key, is(testKey));
             assertThat(value, is(testValue));
 
-            callback.succeed();
+            return Futures.immediateFuture(AbstractAppServerHandler.<C>succeedPutResponse());
         }
     }
 
     private class PutRedirectAppServerHandler extends NoopAppServerHandler<C> {
         @Override
-        public void put(Key key, Value value, PutCallback<C> callback) {
+        public ListenableFuture<PutResponse<C>> put(Key key, Value value) {
             assertThat(key, is(testKey));
             assertThat(value, is(testValue));
 
-            callback.redirect(redirectContact);
+            return Futures.immediateFuture(AbstractAppServerHandler.<C>redirectPutResponse(redirectContact));
         }
     }
 
     private class PutFailAppServerHandler extends NoopAppServerHandler<C> {
         @Override
-        public void put(Key key, Value value, PutCallback callback) {
+        public ListenableFuture<PutResponse<C>> put(Key key, Value value) {
             assertThat(key, is(testKey));
             assertThat(value, is(testValue));
 
-            callback.fail(new Exception("mock exception"));
+            return Futures.immediateFuture(AbstractAppServerHandler.<C>failPutResponse(testException));
         }
     }
 
     private class GetPresentAppServerHandler extends NoopAppServerHandler<C> {
         @Override
-        public void get(Key key, GetCallback<C> callback) {
+        public ListenableFuture<GetResponse<C>> get(Key key) {
             assertThat(key, is(testKey));
 
-            callback.present(testValue);
+            return Futures.immediateFuture(AbstractAppServerHandler.<C>succeedGetResponse(testValue));
         }
     }
 
     private class GetRedirectAppServerHandler extends NoopAppServerHandler<C> {
         @Override
-        public void get(Key key, GetCallback<C> callback) {
+        public ListenableFuture<GetResponse<C>> get(Key key) {
             assertThat(key, is(testKey));
 
-            callback.redirect(redirectContact);
+            return Futures.immediateFuture(AbstractAppServerHandler.<C>redirectGetResponse(redirectContact));
         }
     }
 
     private class GetNotFoundAppServerHandler extends NoopAppServerHandler<C> {
         @Override
-        public void get(Key key, GetCallback callback) {
+        public ListenableFuture<GetResponse<C>> get(Key key) {
             assertThat(key, is(testKey));
 
-            callback.notFound();
+            return Futures.immediateFuture(AbstractAppServerHandler.<C>failGetResponse(new ValueNotFoundException()));
         }
     }
 
     private class GetFailAppServerHandler extends NoopAppServerHandler<C> {
         @Override
-        public void get(Key key, GetCallback callback) {
+        public ListenableFuture<GetResponse<C>> get(Key key) {
             assertThat(key, is(testKey));
 
-            callback.fail(new Exception("mock exception"));
+            return Futures.immediateFuture(AbstractAppServerHandler.<C>failGetResponse(new ValueNotFoundException()));
         }
     }
 
@@ -201,14 +202,10 @@ public abstract class AbstractTransportTest<C extends Contact> {
             transportFactory.buildServer(new LatchAppServerHandler(latch));
         serverWhatever.getServer().startAndWait();
 
-        client.get(serverWhatever.getContact(), testKey, new FailTransportClientGetCallback<C>() {
-            @Override
-            public void notFound() {
-                // Test succeeded
-                latch.countDown();
-                serverWhatever.getServer().stopAndWait();
-            }
-        });
+        @SuppressWarnings("unchecked")
+        final TransportClient.GetCallback<C> callback =
+                (TransportClient.GetCallback<C>) mock(TransportClient.GetCallback.class);
+        client.get(serverWhatever.getContact(), testKey, callback);
 
         latch.await(LATCH_TIMEOUT, TimeUnit.MILLISECONDS);
 
@@ -336,7 +333,9 @@ public abstract class AbstractTransportTest<C extends Contact> {
 
         client.get(serverWhatever.getContact(), testKey, new FailTransportClientGetCallback<C>() {
             @Override
-            public void notFound() {
+            public void fail(TransportException exception) {
+                assertThat(exception.getCause(), instanceOf(ValueNotFoundException.class));
+
                 // Succeed
                 latch.countDown();
                 client.stopAndWait();

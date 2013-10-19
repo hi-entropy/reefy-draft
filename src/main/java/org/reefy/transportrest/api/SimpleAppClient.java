@@ -94,11 +94,6 @@ public class SimpleAppClient extends AbstractIdleService implements AppClient {
             }
 
             @Override
-            public void notFound() {
-                callback.notFound();
-            }
-
-            @Override
             public void fail(TransportException exception) {
                 callback.fail(exception);
             }

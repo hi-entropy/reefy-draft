@@ -15,6 +15,7 @@ import org.reefy.transportrest.api.RawValue;
 import org.reefy.transportrest.api.Value;
 import org.reefy.transportrest.api.transport.TransportClient;
 import org.reefy.transportrest.api.transport.TransportException;
+import org.reefy.transportrest.api.transport.ValueNotFoundException;
 
 import java.io.IOException;
 import java.net.URI;
@@ -84,7 +85,7 @@ public class RestTransportClient
 
              // Not found
              if (statusCode == HttpServletResponse.SC_NOT_FOUND) {
-                 callback.notFound();
+                 callback.fail(new TransportException(new ValueNotFoundException()));
                  return;
              }
 

@@ -1,18 +1,24 @@
 package org.reefy.transportrest.api.transport.local;
 
 import com.google.common.util.concurrent.AbstractService;
+import com.google.common.util.concurrent.ListenableFuture;
 import org.reefy.transportrest.api.*;
 import org.reefy.transportrest.api.transport.ContactNotFoundException;
 import org.reefy.transportrest.api.transport.TransportClient;
 import org.reefy.transportrest.api.transport.TransportException;
 
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * @author Paul Kernfeld <hi-entropy@gmail.com>
  */
 public class LocalTransportClient extends AbstractService implements TransportClient<LocalContact> {
 
+    // TODO: make this configurable?
+    public static final int TIMEOUT = 10000;
     private final ConcurrentMap<LocalContact, LocalTransportServer> contactsToServers;
 
     public LocalTransportClient(
@@ -40,27 +46,35 @@ public class LocalTransportClient extends AbstractService implements TransportCl
         }
 
         final AppServerHandler<LocalContact> appServerHandler = server.getAppServerHandler();
-        appServerHandler.put(key, value, new AppServerHandler.PutCallback<LocalContact>() {
-            @Override
-            public void succeed() {
-                callback.succeed();
-            }
 
-            @Override
-            public void redirect(LocalContact contact) {
-                callback.redirect(contact);
-            }
+        final AppServerHandler.PutResponse<LocalContact> putResponse;
+        try {
+            putResponse = appServerHandler.put(key, value).get(TIMEOUT, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            callback.fail(new TransportException(e));
+            return;
+        }
 
+        if (putResponse.succeeded()) {
+            callback.succeed();
+            return;
+        }
 
-            @Override
-            public void fail(Exception e) {
-                callback.fail(new TransportException(e));
-            }
-        });
+        if (putResponse.redirected() != null) {
+            callback.redirect(putResponse.redirected());
+            return;
+        }
+
+        if (putResponse.failed() != null) {
+            callback.fail(new TransportException(putResponse.failed()));
+            return;
+        }
+
+        throw new AssertionError("Unreachable case");
     }
 
     @Override
-    public void get(LocalContact contact, Key key, final GetCallback<LocalContact> callback) {
+    public void get(LocalContact contact, Key key, final GetCallback callback) {
         final LocalTransportServer server = contactsToServers.get(contact);
 
         if (server == null) {
@@ -69,28 +83,31 @@ public class LocalTransportClient extends AbstractService implements TransportCl
         }
 
         final AppServerHandler<LocalContact> appServerHandler = server.getAppServerHandler();
-        appServerHandler.get(key, new AppServerHandler.GetCallback<LocalContact>() {
-            @Override
-            public void present(Value value) {
-                callback.present(value);
-            }
 
-            @Override
-            public void notFound() {
-                callback.notFound();
-            }
+        final AppServerHandler.GetResponse<LocalContact> getResponse;
+        try {
+            getResponse = appServerHandler.get(key).get(TIMEOUT, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            callback.fail(new TransportException(e));
+            return;
+        }
 
-            @Override
-            public void redirect(LocalContact contact) {
-                callback.redirect(contact);
-            }
+        if (getResponse.succeeded() != null) {
+            callback.present(getResponse.succeeded());
+            return;
+        }
 
+        if (getResponse.redirected() != null) {
+            callback.redirect(getResponse.redirected());
+            return;
+        }
 
-            @Override
-            public void fail(Exception e) {
-                callback.fail(new TransportException(e));
-            }
-        });
+        if (getResponse.failed() != null) {
+            callback.fail(new TransportException(getResponse.failed()));
+            return;
+        }
+
+        throw new AssertionError("Unreachable case");
     }
 
     @Override

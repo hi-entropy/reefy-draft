@@ -1,22 +1,19 @@
 package org.reefy.transportrest;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.Inject;
 import org.reefy.transportrest.api.AppServerHandler;
 import org.reefy.transportrest.api.Key;
 import org.reefy.transportrest.api.RawKey;
-import org.reefy.transportrest.api.Value;
-import org.reefy.transportrest.api.transport.Contact;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
@@ -39,8 +36,9 @@ public class KeyResource {
     }
 
     // TODO: this should not return Object
+    // TODO: this should not throw all these exceptions
     @GET
-    public Response handleFooGet(final @PathParam ("key") String keyHex) {
+    public Response handleFooGet(final @PathParam ("key") String keyHex) throws InterruptedException, ExecutionException, TimeoutException, IOException {
 
         final Key key;
         try {
@@ -53,54 +51,35 @@ public class KeyResource {
         }
 
         // TODO: wrap value/contact in some AppServerHandlerResponse POJO
-        final SettableFuture<Response> serverHandlerFuture = SettableFuture.create();
+        // TODO: make this async
 
-        appServerHandler.get(key, new AppServerHandler.GetCallback<RestContact>() {
-            @Override
-            public void present(Value value) {
-                serverHandlerFuture.set(Response.ok(printHexBinary(value.getBytes())).build());
-            }
+        final AppServerHandler.GetResponse<RestContact> getResponse =
+                appServerHandler.get(key).get(10000, TimeUnit.MILLISECONDS);
 
-            @Override
-            public void redirect(RestContact contact) {
-                // TODO: this is an ugly way to do a redirect
-                final String request = "get/" + keyHex;
-                // TODO: not encoding this url opens us up to a URL-splitting vulnerability
-                try {
-                    serverHandlerFuture.set(
-                            Response.status(Response.Status.MOVED_PERMANENTLY)
-                                    .header("Location", contact.toUrl(request).toString())
-                                    .entity(mapper.writeValueAsString(contact))
-                                    .build()
-                    );
-                } catch (IOException e) {
-                    serverHandlerFuture.setException(e);
-                }
-            }
 
-            @Override
-            public void notFound() {
-                serverHandlerFuture.set(
-                        Response.status(Response.Status.NOT_FOUND)
-                                .entity("key not found")
-                                .build()
-                );
-            }
-
-            @Override
-            public void fail(Exception e) {
-                serverHandlerFuture.set(
-                        Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                                .entity(e.getMessage())
-                                .build()
-                );
-            }
-        });
-
-        try {
-            return serverHandlerFuture.get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new AssertionError(e);
+        if (getResponse.succeeded() != null) {
+            return Response.ok(printHexBinary(getResponse.succeeded().getBytes())).build();
         }
+
+        if (getResponse.redirected() != null) {
+            final RestContact contact = getResponse.redirected();
+
+            // TODO: this is an ugly way to do a redirect
+            final String request = "get/" + keyHex;
+            // TODO: not encoding this url opens us up to a URL-splitting vulnerability. also elsewhere?
+            // TODO: don't throw an IOException, we can probably actually guarantee that there will be no JSON error
+            return Response.status(Response.Status.MOVED_PERMANENTLY)
+                    .header("Location", contact.toUrl(request).toString())
+                    .entity(mapper.writeValueAsString(contact))
+                    .build();
+        }
+
+        if (getResponse.failed() != null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(getResponse.failed().getMessage())
+                    .build();
+        }
+
+        throw new AssertionError("unreachable case");
     }
 }

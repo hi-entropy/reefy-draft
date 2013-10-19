@@ -26,8 +26,6 @@ public interface TransportClient<C extends Contact> extends Service {
 
         void redirect(C contact);
 
-        public void notFound();
-
         public void fail(TransportException exception);
     }
 
