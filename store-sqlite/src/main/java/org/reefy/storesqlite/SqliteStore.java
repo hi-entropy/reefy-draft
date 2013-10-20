@@ -87,11 +87,10 @@ public class SqliteStore extends AbstractIdleService implements Store {
         Preconditions.checkState(isRunning(), "Sqlite store service is not running.");
 
         try {
-            Statement statement = connection.createStatement();
-
-            statement.setQueryTimeout(30);  // set timeout to 30 sec.
-
-            final ResultSet rs = statement.executeQuery("select * from keys");
+            final PreparedStatement statement = connection.prepareStatement("select key, value from keys where key = ?");
+            statement.setBytes(1, key.getBytes());
+            final ResultSet rs = statement.executeQuery();
+            statement.close();
 
             if (!rs.next()) {
                 callback.notFound();

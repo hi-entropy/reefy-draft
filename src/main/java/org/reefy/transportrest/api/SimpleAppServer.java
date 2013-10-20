@@ -2,6 +2,7 @@ package org.reefy.transportrest.api;
 
 import com.google.common.util.concurrent.AbstractService;
 import org.reefy.transportrest.api.store.Store;
+import org.reefy.transportrest.api.store.StoreException;
 import org.reefy.transportrest.api.transport.TransportServer;
 import org.reefy.transportrest.api.transport.TransportServerFactory;
 
@@ -29,5 +30,9 @@ public class SimpleAppServer extends AbstractService {
     protected void doStop() {
         store.stopAndWait();
         transportServer.stopAndWait();
+    }
+
+    public void clear() throws StoreException {
+        this.store.clear();
     }
 }
