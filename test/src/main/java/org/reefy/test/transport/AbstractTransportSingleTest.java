@@ -3,7 +3,9 @@ package org.reefy.test.transport;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.reefy.transportrest.api.*;
 import org.reefy.transportrest.api.transport.Contact;
@@ -12,6 +14,7 @@ import org.reefy.transportrest.api.transport.TransportException;
 import org.reefy.transportrest.api.transport.ValueNotFoundException;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -24,7 +27,7 @@ import static org.mockito.Mockito.mock;
 /**
  * @author Paul Kernfeld - pk@knewton.com
  */
-public abstract class AbstractTransportTest<C extends Contact> {
+public abstract class AbstractTransportSingleTest<C extends Contact> {
 
     private final TransportFactory<C> transportFactory;
 
@@ -35,6 +38,8 @@ public abstract class AbstractTransportTest<C extends Contact> {
     private final C redirectContact;
     private static final int LATCH_TIMEOUT = 1000;
     private final Exception testException = new Exception("mock exception");
+    private TransportClient<C> client;
+    private CountDownLatch latch;
 
     private static class NoopAppServerHandler<C extends Contact> implements AppServerHandler<C> {
 
@@ -72,7 +77,8 @@ public abstract class AbstractTransportTest<C extends Contact> {
 
         @Override
         public void fail(TransportException exception) {
-            Assert.fail("Put unexpectedly failed: " + exception.getMessage() + ExceptionUtils.getStackTrace(exception));
+            Assert.fail("Put unexpectedly failed: " + exception.getMessage() + ExceptionUtils.getStackTrace(
+                exception));
         }
     }
 
@@ -95,7 +101,8 @@ public abstract class AbstractTransportTest<C extends Contact> {
 
         @Override
         public void fail(TransportException exception) {
-            Assert.fail("Get unexpectedly failed: " + exception.getMessage() + ExceptionUtils.getStackTrace(exception));
+            Assert.fail("Get unexpectedly failed: " + exception.getMessage() + ExceptionUtils
+                .getStackTrace(exception));
         }
     }
 
@@ -185,106 +192,105 @@ public abstract class AbstractTransportTest<C extends Contact> {
         }
     }
 
-    protected AbstractTransportTest(TransportFactory<C> transportFactory) {
+    protected AbstractTransportSingleTest(TransportFactory<C> transportFactory) {
         this.transportFactory = transportFactory;
         redirectContact = transportFactory.buildMockContact();
+    }
+
+    @Before
+    public void setUp() throws ExecutionException, InterruptedException {
+        latch = new CountDownLatch(1);
+        client = transportFactory.buildClient();
+        client.start().get();
     }
 
     /**
      * Just ensure that the right server receives a request send by the client.
      */
     @Test
-    public void testServerReceivesRequest() throws InterruptedException {
-        final CountDownLatch latch = new CountDownLatch(1);
-
-        final TransportClient<C> client = transportFactory.buildClient();
+    public void testServerReceivesRequest() throws InterruptedException, ExecutionException {
         final TransportFactory.ServerWhatever<C> serverWhatever =
             transportFactory.buildServer(new LatchAppServerHandler(latch));
-        serverWhatever.getServer().startAndWait();
+        serverWhatever.getServer().start().get();
 
         @SuppressWarnings("unchecked")
         final TransportClient.GetCallback<C> callback =
                 (TransportClient.GetCallback<C>) mock(TransportClient.GetCallback.class);
         client.get(serverWhatever.getContact(), testKey, callback);
 
-        latch.await(LATCH_TIMEOUT, TimeUnit.MILLISECONDS);
+        assertTrue(latch.await(LATCH_TIMEOUT, TimeUnit.MILLISECONDS));
 
-        client.stopAndWait();
+        serverWhatever.getServer().stop().get();
     }
 
     @Test
-    public void testPutSucceed() throws InterruptedException {
-        final TransportClient<C> client = transportFactory.buildClient();
+    public void testPutSucceed() throws InterruptedException, ExecutionException {
         final TransportFactory.ServerWhatever<C> serverWhatever =
-                transportFactory.buildServer(new PutSucceedAppServerHandler());
-        serverWhatever.getServer().startAndWait();
+            transportFactory.buildServer(new PutSucceedAppServerHandler());
+        serverWhatever.getServer().start().get();
 
-        final CountDownLatch latch = new CountDownLatch(1);
-
-        client.put(serverWhatever.getContact(), testKey, testValue, new FailTransportClientPutCallback() {
-            @Override
-            public void succeed() {
-                // Succeed
-                latch.countDown();
-                client.stopAndWait();
-            }
-        });
+        client.put(serverWhatever.getContact(), testKey, testValue,
+                   new FailTransportClientPutCallback() {
+                       @Override
+                       public void succeed() {
+                           // Succeed
+                           latch.countDown();
+                       }
+                   });
 
         assertTrue(latch.await(LATCH_TIMEOUT, TimeUnit.MILLISECONDS));
+
+        serverWhatever.getServer().stop().get();
     }
 
     @Test
-    public void testPutRedirect() throws InterruptedException {
-        final TransportClient<C> client = transportFactory.buildClient();
+    public void testPutRedirect() throws InterruptedException, ExecutionException {
         final TransportFactory.ServerWhatever<C> serverWhatever =
-                transportFactory.buildServer(new PutRedirectAppServerHandler());
-        serverWhatever.getServer().startAndWait();
+            transportFactory.buildServer(new PutRedirectAppServerHandler());
+        serverWhatever.getServer().start().get();
 
-        final CountDownLatch latch = new CountDownLatch(1);
+        client.put(serverWhatever.getContact(), testKey, testValue,
+                   new FailTransportClientPutCallback<C>() {
+                       @Override
+                       public void redirect(C redirect) {
+                           assertEquals(redirect, redirectContact);
 
-        client.put(serverWhatever.getContact(), testKey, testValue, new FailTransportClientPutCallback<C>() {
-            @Override
-            public void redirect(C redirect) {
-                assertEquals(redirect, redirectContact);
-
-                // Succeed
-                latch.countDown();
-                client.stopAndWait();
-            }
-        });
+                           // Succeed
+                           latch.countDown();
+                           client.stopAndWait();
+                       }
+                   });
 
         assertTrue(latch.await(LATCH_TIMEOUT, TimeUnit.MILLISECONDS));
+
+        serverWhatever.getServer().stop().get();
     }
 
     @Test
-    public void testPutFail() throws InterruptedException {
-        final TransportClient<C> client = transportFactory.buildClient();
+    public void testPutFail() throws InterruptedException, ExecutionException {
         final TransportFactory.ServerWhatever<C> serverWhatever =
-                transportFactory.buildServer(new PutFailAppServerHandler());
-        serverWhatever.getServer().startAndWait();
+            transportFactory.buildServer(new PutFailAppServerHandler());
+        serverWhatever.getServer().start().get();
 
-        final CountDownLatch latch = new CountDownLatch(1);
-
-        client.put(serverWhatever.getContact(), testKey, testValue, new FailTransportClientPutCallback() {
-            @Override
-            public void fail(TransportException exception) {
-                // Succeed
-                latch.countDown();
-                client.stopAndWait();
-            }
-        });
+        client.put(serverWhatever.getContact(), testKey, testValue,
+                   new FailTransportClientPutCallback() {
+                       @Override
+                       public void fail(TransportException exception) {
+                           // Succeed
+                           latch.countDown();
+                       }
+                   });
 
         assertTrue(latch.await(LATCH_TIMEOUT, TimeUnit.MILLISECONDS));
+
+        serverWhatever.getServer().stop().get();
     }
 
     @Test
-    public void testGetPresent() throws InterruptedException {
-        final TransportClient<C> client = transportFactory.buildClient();
+    public void testGetPresent() throws InterruptedException, ExecutionException {
         final TransportFactory.ServerWhatever<C> serverWhatever =
             transportFactory.buildServer(new GetPresentAppServerHandler());
-        serverWhatever.getServer().startAndWait();
-
-        final CountDownLatch latch = new CountDownLatch(1);
+        serverWhatever.getServer().start().get();
 
         client.get(serverWhatever.getContact(), testKey, new FailTransportClientGetCallback<C>() {
             @Override
@@ -292,21 +298,19 @@ public abstract class AbstractTransportTest<C extends Contact> {
                 // Succeed
                 Assert.assertEquals(testValue, value);
                 latch.countDown();
-                client.stopAndWait();
             }
         });
 
         assertTrue(latch.await(LATCH_TIMEOUT, TimeUnit.MILLISECONDS));
+
+        serverWhatever.getServer().stop().get();
     }
 
     @Test
-    public void testGetRedirect() throws InterruptedException {
-        final TransportClient<C> client = transportFactory.buildClient();
+    public void testGetRedirect() throws InterruptedException, ExecutionException {
         final TransportFactory.ServerWhatever<C> serverWhatever =
-                transportFactory.buildServer(new GetRedirectAppServerHandler());
-        serverWhatever.getServer().startAndWait();
-
-        final CountDownLatch latch = new CountDownLatch(1);
+            transportFactory.buildServer(new GetRedirectAppServerHandler());
+        serverWhatever.getServer().start().get();
 
         client.get(serverWhatever.getContact(), testKey, new FailTransportClientGetCallback<C>() {
             @Override
@@ -315,23 +319,21 @@ public abstract class AbstractTransportTest<C extends Contact> {
                 // TODO: latches
                 Assert.assertEquals(redirectContact, contact);
                 latch.countDown();
-                client.stopAndWait();
             }
         });
 
         assertTrue(latch.await(LATCH_TIMEOUT, TimeUnit.MILLISECONDS));
+
+        serverWhatever.getServer().stop().get();
     }
 
 
 
     @Test
-    public void testGetNotFound() throws InterruptedException {
-        final TransportClient<C> client = transportFactory.buildClient();
+    public void testGetNotFound() throws InterruptedException, ExecutionException {
         final TransportFactory.ServerWhatever<C> serverWhatever =
             transportFactory.buildServer(new GetNotFoundAppServerHandler());
-        serverWhatever.getServer().startAndWait();
-
-        final CountDownLatch latch = new CountDownLatch(1);
+        serverWhatever.getServer().start().get();
 
         client.get(serverWhatever.getContact(), testKey, new FailTransportClientGetCallback<C>() {
             @Override
@@ -340,31 +342,35 @@ public abstract class AbstractTransportTest<C extends Contact> {
 
                 // Succeed
                 latch.countDown();
-                client.stopAndWait();
             }
         });
 
         assertTrue(latch.await(LATCH_TIMEOUT, TimeUnit.MILLISECONDS));
+
+        serverWhatever.getServer().stop().get();
     }
 
     @Test
-    public void testGetFail() throws InterruptedException {
-        final TransportClient<C> client = transportFactory.buildClient();
+    public void testGetFail() throws InterruptedException, ExecutionException {
         final TransportFactory.ServerWhatever<C> serverWhatever =
             transportFactory.buildServer(new GetFailAppServerHandler());
-        serverWhatever.getServer().startAndWait();
-
-        final CountDownLatch latch = new CountDownLatch(1);
+        serverWhatever.getServer().start().get();
 
         client.get(serverWhatever.getContact(), testKey, new FailTransportClientGetCallback<C>() {
             @Override
             public void fail(TransportException exception) {
                 // Succeed
                 latch.countDown();
-                client.stopAndWait();
             }
         });
 
         assertTrue(latch.await(LATCH_TIMEOUT, TimeUnit.MILLISECONDS));
+
+        serverWhatever.getServer().stop().get();
+    }
+
+    @After
+    public void tearDown() throws ExecutionException, InterruptedException {
+        client.stop().get();
     }
 }

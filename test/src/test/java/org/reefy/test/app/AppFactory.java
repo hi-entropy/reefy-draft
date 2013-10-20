@@ -1,4 +1,4 @@
-package org.reefy.test;
+package org.reefy.test.app;
 
 import org.reefy.transportrest.api.AppClient;
 

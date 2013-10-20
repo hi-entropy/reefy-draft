@@ -1,5 +1,6 @@
 package org.reefy.transportrest.api;
 
+import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.common.util.concurrent.AbstractService;
 import org.reefy.transportrest.api.store.Store;
 import org.reefy.transportrest.api.store.StoreException;
@@ -9,7 +10,7 @@ import org.reefy.transportrest.api.transport.TransportServerFactory;
 /**
  * @author Paul Kernfeld <hi-entropy@gmail.com>
  */
-public class SimpleAppServer extends AbstractService {
+public class SimpleAppServer extends AbstractIdleService {
     private final Store store;
     private final AppServerHandler handler;
     private final TransportServer transportServer;
@@ -21,13 +22,13 @@ public class SimpleAppServer extends AbstractService {
     }
 
     @Override
-    protected void doStart() {
+    protected void startUp() throws Exception {
         store.startAndWait();
         transportServer.startAndWait();
     }
 
     @Override
-    protected void doStop() {
+    protected void shutDown() throws Exception {
         store.stopAndWait();
         transportServer.stopAndWait();
     }

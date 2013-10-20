@@ -18,7 +18,6 @@ public class SqliteStore extends AbstractIdleService implements Store {
     private final String id;
     private volatile Connection connection = null;
 
-    // TODO: for some reason, a dash in the ID seems to break this
     public SqliteStore(String id) {
         this.id = id;
     }
@@ -34,7 +33,7 @@ public class SqliteStore extends AbstractIdleService implements Store {
         connection = DriverManager.getConnection("jdbc:sqlite:db/" + id + ".db");
 
         final Statement statement = connection.createStatement();
-        statement.executeUpdate("create table keys (key char(20), value blob)");
+        statement.executeUpdate("create table if not exists keys (key char(20), value blob)");
         statement.close();
     }
 

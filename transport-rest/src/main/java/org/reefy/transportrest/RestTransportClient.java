@@ -1,6 +1,7 @@
 package org.reefy.transportrest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -62,6 +63,8 @@ public class RestTransportClient
 
     @Override
     public void put(RestContact contact, Key key, Value value, PutCallback callback) {
+        Preconditions.checkState(isRunning());
+
         // TODO: Make sure this doesn't have security holes
         // TODO: This is probably not the best way to compose this URL
         final String request = "key/" + printHexBinary(key.getBytes());
@@ -123,6 +126,8 @@ public class RestTransportClient
 
     @Override
     public void get(RestContact contact, Key key, GetCallback<RestContact> callback) {
+        Preconditions.checkState(isRunning());
+
         // TODO: Make sure this doesn't have security holes
         // TODO: This is probably not the best way to compose this URL
         final String request = "key/" + printHexBinary(key.getBytes());

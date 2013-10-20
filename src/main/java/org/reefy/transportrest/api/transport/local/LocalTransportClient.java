@@ -1,7 +1,7 @@
 package org.reefy.transportrest.api.transport.local;
 
-import com.google.common.util.concurrent.AbstractService;
-import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.base.Preconditions;
+
 import org.reefy.transportrest.api.*;
 import org.reefy.transportrest.api.transport.ContactNotFoundException;
 import org.reefy.transportrest.api.transport.TransportClient;
@@ -15,7 +15,7 @@ import java.util.concurrent.TimeoutException;
 /**
  * @author Paul Kernfeld <hi-entropy@gmail.com>
  */
-public class LocalTransportClient extends AbstractService implements TransportClient<LocalContact> {
+public class LocalTransportClient extends TrivialIdleService implements TransportClient<LocalContact> {
 
     // TODO: make this configurable?
     public static final int TIMEOUT = 10000;
@@ -27,17 +27,9 @@ public class LocalTransportClient extends AbstractService implements TransportCl
     }
 
     @Override
-    protected void doStart() {
-        // No startup routine is required
-    }
-
-    @Override
-    protected void doStop() {
-        // Nothing to clean up
-    }
-
-    @Override
     public void put(LocalContact contact, Key key, Value value, final PutCallback callback) {
+        Preconditions.checkState(isRunning());
+
         final LocalTransportServer server = contactsToServers.get(contact);
 
         if (server == null) {
@@ -75,6 +67,8 @@ public class LocalTransportClient extends AbstractService implements TransportCl
 
     @Override
     public void get(LocalContact contact, Key key, final GetCallback callback) {
+        Preconditions.checkState(isRunning());
+
         final LocalTransportServer server = contactsToServers.get(contact);
 
         if (server == null) {

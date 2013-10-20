@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
 import org.reefy.transportrest.api.Key;
-import org.reefy.transportrest.api.TrivialService;
+import org.reefy.transportrest.api.TrivialIdleService;
 import org.reefy.transportrest.api.Value;
 
 import java.util.concurrent.ConcurrentMap;
@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * @author Paul Kernfeld - pk@knewton.com
  */
-public class InMemoryStore extends TrivialService implements Store {
+public class InMemoryStore extends TrivialIdleService implements Store {
     private final ConcurrentMap<Key, Value> keyValueMap = Maps.newConcurrentMap();
 
     @Override
