@@ -6,6 +6,7 @@ import org.reefy.transportrest.RestTransportServer;
 import org.reefy.transportrest.api.AppServerHandler;
 import org.reefy.transportrest.api.RawKey;
 import org.reefy.transportrest.api.SimpleAppServer;
+import org.reefy.transportrest.api.store.Store;
 import org.reefy.transportrest.api.store.StoreException;
 import org.reefy.transportrest.api.transport.TransportServer;
 import org.reefy.transportrest.api.transport.TransportServerFactory;
@@ -15,12 +16,15 @@ import org.reefy.transportrest.api.transport.TransportServerFactory;
  */
 public class HelloWorldServer {
     public static void main(String[] args) throws StoreException {
-        final SimpleAppServer simpleAppServer = new SimpleAppServer(new SqliteStore(), new TransportServerFactory() {
+        final Store store = new SqliteStore("hello-world");
+        final TransportServerFactory transportServerFactory = new TransportServerFactory() {
             @Override
             public TransportServer build(AppServerHandler handler) {
-                return new RestTransportServer(new RestContact(RawKey.pseudorandom(), "localhost", 8000), handler);
+                return new RestTransportServer(
+                    new RestContact(RawKey.pseudorandom(), "localhost", 8000), handler);
             }
-        });
+        };
+        final SimpleAppServer simpleAppServer = new SimpleAppServer(store, transportServerFactory);
 
         simpleAppServer.startAndWait();
         simpleAppServer.clear();

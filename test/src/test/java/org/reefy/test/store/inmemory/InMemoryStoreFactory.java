@@ -1,6 +1,6 @@
 package org.reefy.test.store.inmemory;
 
-import org.reefy.test.StoreFactory;
+import org.reefy.test.store.StoreFactory;
 import org.reefy.transportrest.api.store.InMemoryStore;
 import org.reefy.transportrest.api.store.Store;
 

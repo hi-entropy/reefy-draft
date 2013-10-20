@@ -15,36 +15,27 @@ import java.sql.*;
 
 public class SqliteStore extends AbstractIdleService implements Store {
 
-    public volatile Connection connection = null;
+    private final String id;
+    private volatile Connection connection = null;
+
+    public SqliteStore(String id) {
+        this.id = id;
+    }
 
     @Override
     protected void startUp() throws Exception {
         // create a database connection
-        if (connection == null) {
-            try {
-                Class.forName("org.sqlite.JDBC");
-            } catch (ClassNotFoundException e) {
-                throw new AssertionError("JDBC driver not found. This should probably never happen.");
-            }
+        Preconditions.checkState(connection == null);
+        Class.forName("org.sqlite.JDBC");
 
-            new File("db").mkdirs();
+        new File("db").mkdirs();
 
-            try {
-                connection = DriverManager.getConnection("jdbc:sqlite:db/sample.db");
-            } catch (SQLException e) {
-                throw new StoreException(e);
-            }
-        }
+        connection = DriverManager.getConnection("jdbc:sqlite:db/" + id + ".db");
     }
 
     @Override
-    protected void shutDown() throws Exception {
-        try {
-            connection.close();
-        } catch (SQLException e) {
-            // Swallow this probably
-            // TODO: log
-        }
+    protected void shutDown() throws Exception{
+        connection.close();
     }
 
     // TODO: Synchronizing everything might be bad for perf
@@ -90,9 +81,9 @@ public class SqliteStore extends AbstractIdleService implements Store {
             final PreparedStatement statement = connection.prepareStatement("select key, value from keys where key = ?");
             statement.setBytes(1, key.getBytes());
             final ResultSet rs = statement.executeQuery();
-            statement.close();
 
             if (!rs.next()) {
+                statement.close();
                 callback.notFound();
                 return;
             }
@@ -100,10 +91,14 @@ public class SqliteStore extends AbstractIdleService implements Store {
             // read the result set
             final RawKey retrieved = new RawKey(rs.getBytes("key"));
             System.out.println("key = " + retrieved);
-            System.out.println("value = " + new String(rs.getBytes("value"), StandardCharsets.ISO_8859_1));
+            final byte[] valueBytes = rs.getBytes("value");
+            System.out.println("value = " + new String(valueBytes, StandardCharsets.ISO_8859_1));
 
-            callback.succeed(new RawValue(rs.getBytes("value")));
+            statement.close();
+
+            callback.succeed(new RawValue(valueBytes));
         } catch (SQLException e) {
+            //TODO: statement.close();
             callback.fail(new StoreException(e));
         }
     }

@@ -1,4 +1,4 @@
-package org.reefy.test;
+package org.reefy.test.store;
 
 import org.reefy.transportrest.api.store.Store;
 

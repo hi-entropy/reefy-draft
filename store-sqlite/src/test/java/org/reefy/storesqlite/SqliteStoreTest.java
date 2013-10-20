@@ -7,7 +7,9 @@ import org.reefy.test.store.AbstractStoreTest;
  */
 public class SqliteStoreTest extends AbstractStoreTest {
 
+    public static final int TIMEOUT_MILLIS = 1000;
+
     public SqliteStoreTest() {
-        super(new SqliteStoreFactory());
+        super(new SqliteStoreFactory(), TIMEOUT_MILLIS);
     }
 }
