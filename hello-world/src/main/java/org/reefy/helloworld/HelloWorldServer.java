@@ -16,7 +16,7 @@ import org.reefy.transportrest.api.transport.TransportServerFactory;
  */
 public class HelloWorldServer {
     public static void main(String[] args) throws StoreException {
-        final Store store = new SqliteStore("hello-world");
+        final Store store = new SqliteStore("helloworld");
         final TransportServerFactory transportServerFactory = new TransportServerFactory() {
             @Override
             public TransportServer build(AppServerHandler handler) {
