@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.AbstractIdleService;
 
 import org.reefy.transportrest.api.store.Store;
 import org.reefy.transportrest.api.store.StoreException;
+import org.reefy.transportrest.api.transport.Contact;
 import org.reefy.transportrest.api.transport.TransportServer;
 import org.reefy.transportrest.api.transport.TransportServerFactory;
 
@@ -35,5 +36,9 @@ public class SimpleAppServer extends AbstractIdleService {
 
     public void clear() throws StoreException {
         this.store.clear();
+    }
+
+    public Contact getContact() {
+        return transportServer.getContact();
     }
 }

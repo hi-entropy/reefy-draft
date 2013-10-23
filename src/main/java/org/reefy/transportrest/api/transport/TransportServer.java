@@ -8,5 +8,5 @@ import org.reefy.transportrest.api.transport.Contact;
  * @author Paul Kernfeld <hi-entropy@gmail.com>
  */
 public interface TransportServer<C extends Contact> extends Service {
-
+    public C getContact();
 }

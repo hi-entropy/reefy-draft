@@ -13,14 +13,21 @@ import org.reefy.transportrest.api.transport.Contact;
 public class LocalTransportServer
     extends TrivialIdleService implements TransportServer<LocalContact> {
 
+    private final LocalContact contact;
     private final AppServerHandler<?> appServerHandler;
 
-    public LocalTransportServer(AppServerHandler appServerHandler) {
+    public LocalTransportServer(LocalContact contact, AppServerHandler appServerHandler) {
+        this.contact = contact;
         this.appServerHandler = appServerHandler;
     }
 
     // TODO: This is probably not the best place to do this cast.
     public <C extends Contact> AppServerHandler<C> getAppServerHandler() {
         return (AppServerHandler<C>) appServerHandler;
+    }
+
+    @Override
+    public LocalContact getContact() {
+        return contact;
     }
 }

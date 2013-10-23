@@ -24,7 +24,7 @@ public class LocalTransportFactory implements TransportFactory<LocalContact> {
     public ServerWhatever<LocalContact> buildServer(AppServerHandler handler) {
         final Key key = RawKey.pseudorandom();
         final LocalContact contact = new LocalContact(key);
-        final LocalTransportServer server = new LocalTransportServer(handler);
+        final LocalTransportServer server = new LocalTransportServer(contact, handler);
         contactsToServers.put(contact, server);
         return new AbstractTransportServerWhatever<LocalContact>(contact, server);
     }

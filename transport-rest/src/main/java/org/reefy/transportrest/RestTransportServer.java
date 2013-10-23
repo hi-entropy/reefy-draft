@@ -22,14 +22,14 @@ import java.util.EnumSet;
  */
 public class RestTransportServer extends AbstractService implements TransportServer<RestContact> {
 
-    private final RestContact restContact;
+    private final RestContact contact;
 
     private final Server server;
 
-    public RestTransportServer(RestContact restContact, final AppServerHandler appServerHandler) {
-        this.restContact = restContact;
+    public RestTransportServer(RestContact contact, final AppServerHandler appServerHandler) {
+        this.contact = contact;
 
-        server = new Server(restContact.getPort());
+        server = new Server(contact.getPort());
         ServletContextHandler servletContextHandler = new ServletContextHandler();
         servletContextHandler.setContextPath("/");
 
@@ -51,7 +51,6 @@ public class RestTransportServer extends AbstractService implements TransportSer
         server.setHandler(servletContextHandler);
     }
 
-
     @Override
     protected void doStart() {
         try {
@@ -70,5 +69,10 @@ public class RestTransportServer extends AbstractService implements TransportSer
             notifyFailed(e);
         }
         notifyStopped();
+    }
+
+    @Override
+    public RestContact getContact() {
+        return contact;
     }
 }
