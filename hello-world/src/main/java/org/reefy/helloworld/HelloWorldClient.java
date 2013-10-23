@@ -22,8 +22,7 @@ public class HelloWorldClient {
         final TransportClient transportClient = new RestTransportClient();
         final SimpleAppClient appClient = new SimpleAppClient(transportClient);
 
-        // TODO: This should NOT be null... we need a way to bootstrap by adding just an IP and port, w/o a key
-        appClient.addContact(new RestContact(null, "localhost", 8000));
+        appClient.addContact(new RestContact(RawKey.pseudorandom(), "localhost", 8000));
 
         appClient.startAndWait();
 

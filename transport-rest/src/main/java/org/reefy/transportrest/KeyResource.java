@@ -1,18 +1,29 @@
 package org.reefy.transportrest;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
-import org.reefy.transportrest.api.*;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import org.reefy.transportrest.api.AppServerHandler;
+import org.reefy.transportrest.api.Key;
+import org.reefy.transportrest.api.RawKey;
+import org.reefy.transportrest.api.RawValue;
+import org.reefy.transportrest.api.Value;
+
 import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
@@ -49,7 +60,6 @@ public class KeyResource {
         }
         final Value value = new RawValue(valueString.getBytes());
 
-        // TODO: wrap value/contact in some AppServerHandlerResponse POJO
         // TODO: make this async
         final AppServerHandler.PutResponse<RestContact> putResponse =
                 appServerHandler.put(key, value).get(10000, TimeUnit.MILLISECONDS);
@@ -97,7 +107,6 @@ public class KeyResource {
             );
         }
 
-        // TODO: wrap value/contact in some AppServerHandlerResponse POJO
         // TODO: make this async
 
         final AppServerHandler.GetResponse<RestContact> getResponse =

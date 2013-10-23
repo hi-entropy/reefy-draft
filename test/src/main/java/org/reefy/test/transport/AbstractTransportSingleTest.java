@@ -316,7 +316,6 @@ public abstract class AbstractTransportSingleTest<C extends Contact> {
             @Override
             public void redirect(C contact) {
                 // Succeed
-                // TODO: latches
                 Assert.assertEquals(redirectContact, contact);
                 latch.countDown();
             }

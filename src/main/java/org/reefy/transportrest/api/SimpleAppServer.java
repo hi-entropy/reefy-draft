@@ -1,7 +1,7 @@
 package org.reefy.transportrest.api;
 
 import com.google.common.util.concurrent.AbstractIdleService;
-import com.google.common.util.concurrent.AbstractService;
+
 import org.reefy.transportrest.api.store.Store;
 import org.reefy.transportrest.api.store.StoreException;
 import org.reefy.transportrest.api.transport.TransportServer;
@@ -23,14 +23,14 @@ public class SimpleAppServer extends AbstractIdleService {
 
     @Override
     protected void startUp() throws Exception {
-        store.startAndWait();
-        transportServer.startAndWait();
+        store.start().get();
+        transportServer.start().get();
     }
 
     @Override
     protected void shutDown() throws Exception {
-        store.stopAndWait();
-        transportServer.stopAndWait();
+        store.stop().get();
+        transportServer.stop().get();
     }
 
     public void clear() throws StoreException {
