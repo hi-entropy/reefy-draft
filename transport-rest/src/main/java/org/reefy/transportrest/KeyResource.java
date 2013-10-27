@@ -51,7 +51,7 @@ public class KeyResource {
     public Response handleFooPut(final @PathParam("key") String keyHex, final @FormParam("value") String valueString) throws InterruptedException, ExecutionException, TimeoutException, IOException {
         final Key key;
         try {
-            key = new RawKey(parseHexBinary(keyHex));
+            key = RawKey.from(parseHexBinary(keyHex));
         } catch (Exception e) {
             throw new WebApplicationException(
                     e,
@@ -99,7 +99,7 @@ public class KeyResource {
 
         final Key key;
         try {
-            key = new RawKey(parseHexBinary(keyHex));
+            key = RawKey.from(parseHexBinary(keyHex));
         } catch (Exception e) {
             throw new WebApplicationException(
                     e,

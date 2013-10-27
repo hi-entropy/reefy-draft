@@ -7,19 +7,32 @@ import org.reefy.transportrest.api.store.StoreException;
 import org.reefy.transportrest.api.transport.Contact;
 import org.reefy.transportrest.api.transport.ValueNotFoundException;
 
+import java.util.Map;
+
 /**
+ * This could be thought of as a non-static inner class of SimpleAppServer.
+ *
  * @author Paul Kernfeld <hi-entropy@gmail.com>
  */
 public class SimpleAppServerHandler<C extends Contact> implements AppServerHandler {
+    private final SimpleAppServer<C> owner;
     private final Store store;
 
-    public SimpleAppServerHandler(Store store) {
+    public SimpleAppServerHandler(SimpleAppServer<C> owner, Store store) {
+        this.owner = owner;
         this.store = store;
     }
 
     @Override
     public ListenableFuture<PutResponse<C>> put(Key key, Value value) {
+        final Map.Entry<C, SimpleAppServer.NeighborInfo<C>> bestNeighbor = owner.bestNeighbor(key);
+
         final SettableFuture<PutResponse<C>> settableFuture = SettableFuture.create();
+        if (bestNeighbor != null) {
+            settableFuture.set(AbstractAppServerHandler.<C>redirectPutResponse(bestNeighbor.getValue().getContact()));
+            return settableFuture;
+        }
+
         store.put(key, value, new Store.PutCallback() {
             @Override
             public void succeed() {
@@ -37,7 +50,14 @@ public class SimpleAppServerHandler<C extends Contact> implements AppServerHandl
 
     @Override
     public ListenableFuture<GetResponse<C>> get(Key key) {
+        final Map.Entry<C, SimpleAppServer.NeighborInfo<C>> bestNeighbor = owner.bestNeighbor(key);
+
         final SettableFuture<GetResponse<C>> settableFuture = SettableFuture.create();
+        if (bestNeighbor != null) {
+            settableFuture.set(AbstractAppServerHandler.<C>redirectGetResponse(bestNeighbor.getValue().getContact()));
+            return settableFuture;
+        }
+
         store.get(key, new Store.GetCallback() {
             @Override
             public void succeed(Value value) {

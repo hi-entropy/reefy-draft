@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class ManyServersTest {
 
-    public static final int A_MILLION = 1;
+    public static final int A_MILLION = 1000;
     public static final long TIMEOUT_MILLIS = 1;
 
     private final List<SimpleAppServer> servers = Lists.newArrayList();
@@ -54,6 +54,10 @@ public class ManyServersTest {
                 }
             });
             server.start().get();
+            for (int j = 0; j < i; j++) {
+                server.addNeighbor(servers.get(j).getContact());
+                servers.get(j).addNeighbor(server.getContact());
+            }
             servers.add(server);
 
             final SimpleAppClient client = new SimpleAppClient(transportFactory.buildClient());

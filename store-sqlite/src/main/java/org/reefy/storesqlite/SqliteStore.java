@@ -93,7 +93,7 @@ public class SqliteStore extends AbstractIdleService implements Store {
             }
 
             // read the result set
-            final RawKey retrieved = new RawKey(rs.getBytes("key"));
+            final RawKey retrieved = RawKey.from(rs.getBytes("key"));
             System.out.println("key = " + retrieved);
             final byte[] valueBytes = rs.getBytes("value");
             System.out.println("value = " + new String(valueBytes, StandardCharsets.ISO_8859_1));

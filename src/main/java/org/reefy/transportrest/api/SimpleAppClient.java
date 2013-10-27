@@ -37,7 +37,7 @@ public class SimpleAppClient extends AbstractIdleService implements AppClient {
 
         // This is sketchy...
         final TransportClient.PutCallback putter = new TransportClient.PutCallback() {
-            volatile int nTimesCalled = 0;
+            final List<Contact> hops = Lists.newArrayList();
 
             @Override
             public void succeed() {
@@ -47,11 +47,11 @@ public class SimpleAppClient extends AbstractIdleService implements AppClient {
             // Keep trying until we find the right server
             @Override
             public void redirect(Contact contact) {
-                ++nTimesCalled;
-                if (nTimesCalled <= MAX_N_HOPS) {
+                hops.add(contact);
+                if (hops.size() <= MAX_N_HOPS) {
                     transport.put(contact, key, value, this);
                 } else {
-                    callback.fail(new HopsExceededException());
+                    callback.fail(new HopsExceededException(hops));
                 }
             }
 
@@ -75,7 +75,7 @@ public class SimpleAppClient extends AbstractIdleService implements AppClient {
 
         // This is sketchy...
         final TransportClient.GetCallback getter = new TransportClient.GetCallback() {
-            volatile int nTimesCalled = 0;
+            final List<Contact> hops = Lists.newArrayList();
 
             @Override
             public void present(Value value) {
@@ -85,11 +85,11 @@ public class SimpleAppClient extends AbstractIdleService implements AppClient {
             // Keep trying until we find the right server
             @Override
             public void redirect(Contact contact) {
-                ++nTimesCalled;
-                if (nTimesCalled <= MAX_N_HOPS) {
+                hops.add(contact);
+                if (hops.size() <= MAX_N_HOPS) {
                     transport.get(contact, key, this);
                 } else {
-                    callback.fail(new HopsExceededException());
+                    callback.fail(new HopsExceededException(hops));
                 }
             }
 
