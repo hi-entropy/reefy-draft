@@ -33,9 +33,9 @@
     </licenses>
 
     <modules>
+        <module>core</module>
         <module>hello-world</module>
         <module>store-sqlite</module>
-        <module>test</module>
         <module>transport-rest</module>
     </modules>
 
@@ -82,12 +82,6 @@
 
     <!-- Common dependencies -->
     <dependencies>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>

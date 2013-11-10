@@ -3,11 +3,11 @@ package org.reefy.transportrest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 
-import org.reefy.transportrest.api.AppServerHandler;
-import org.reefy.transportrest.api.Key;
-import org.reefy.transportrest.api.RawKey;
-import org.reefy.transportrest.api.RawValue;
-import org.reefy.transportrest.api.Value;
+import org.reefy.core.AppServerHandler;
+import org.reefy.core.Key;
+import org.reefy.core.RawKey;
+import org.reefy.core.RawValue;
+import org.reefy.core.Value;
 
 import java.io.IOException;
 import java.net.URI;

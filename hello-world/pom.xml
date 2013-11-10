@@ -11,7 +11,7 @@
     <artifactId>hello-world</artifactId>
     <packaging>jar</packaging>
 
-    <name>Test stuff</name>
+    <name>Hello world</name>
 
     <build>
         <pluginManagement>
@@ -30,7 +30,7 @@
     <dependencies>
         <dependency>
             <groupId>org.reefy</groupId>
-            <artifactId>reefy</artifactId>
+            <artifactId>core</artifactId>
             <version>0.1.0</version>
         </dependency>
 

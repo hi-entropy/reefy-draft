@@ -1,11 +1,11 @@
 package org.reefy.transportrest;
 
-import org.reefy.test.transport.AbstractTransportServerWhatever;
-import org.reefy.test.transport.TransportFactory;
-import org.reefy.transportrest.api.AppServerHandler;
-import org.reefy.transportrest.api.Key;
-import org.reefy.transportrest.api.RawKey;
-import org.reefy.transportrest.api.transport.TransportClient;
+import org.reefy.core.AppServerHandler;
+import org.reefy.core.Key;
+import org.reefy.core.RawKey;
+import org.reefy.core.transport.TransportClient;
+import org.reefy.core.transport.test.AbstractTransportServerWhatever;
+import org.reefy.core.transport.test.TransportFactory;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;

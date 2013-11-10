@@ -1,7 +1,7 @@
 package org.reefy.storesqlite;
 
-import org.reefy.test.store.StoreFactory;
-import org.reefy.transportrest.api.store.Store;
+import org.reefy.core.store.Store;
+import org.reefy.core.store.test.StoreFactory;
 
 /**
  * @author Paul Kernfeld <hi-entropy@gmail.com>

@@ -2,8 +2,8 @@ package org.reefy.helloworld;
 
 import org.reefy.transportrest.RestContact;
 import org.reefy.transportrest.RestTransportClient;
-import org.reefy.transportrest.api.*;
-import org.reefy.transportrest.api.transport.TransportClient;
+import org.reefy.core.*;
+import org.reefy.core.transport.TransportClient;
 
 import java.io.BufferedReader;
 import java.io.IOException;

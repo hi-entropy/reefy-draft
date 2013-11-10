@@ -15,12 +15,12 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
-import org.reefy.transportrest.api.Key;
-import org.reefy.transportrest.api.RawValue;
-import org.reefy.transportrest.api.Value;
-import org.reefy.transportrest.api.transport.TransportClient;
-import org.reefy.transportrest.api.transport.TransportException;
-import org.reefy.transportrest.api.transport.ValueNotFoundException;
+import org.reefy.core.Key;
+import org.reefy.core.RawValue;
+import org.reefy.core.Value;
+import org.reefy.core.transport.TransportClient;
+import org.reefy.core.transport.TransportException;
+import org.reefy.core.transport.ValueNotFoundException;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;

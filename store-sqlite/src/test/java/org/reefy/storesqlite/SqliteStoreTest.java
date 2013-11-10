@@ -1,6 +1,6 @@
 package org.reefy.storesqlite;
 
-import org.reefy.test.store.AbstractStoreTest;
+import org.reefy.core.store.test.AbstractStoreTest;
 
 /**
  * @author Paul Kernfeld <hi-entropy@gmail.com>

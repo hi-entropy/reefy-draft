@@ -4,10 +4,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.reefy.transportrest.api.AbstractContact;
-import org.reefy.transportrest.api.Key;
-import org.reefy.transportrest.api.RawKey;
-import org.reefy.transportrest.api.transport.Contact;
+import org.reefy.core.AbstractContact;
+import org.reefy.core.Key;
+import org.reefy.core.RawKey;
+import org.reefy.core.transport.Contact;
 
 import javax.ws.rs.core.UriBuilder;
 import java.io.Serializable;

@@ -12,8 +12,8 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.reefy.transportrest.api.AppServerHandler;
-import org.reefy.transportrest.api.transport.TransportServer;
+import org.reefy.core.AppServerHandler;
+import org.reefy.core.transport.TransportServer;
 
 import java.util.EnumSet;
 

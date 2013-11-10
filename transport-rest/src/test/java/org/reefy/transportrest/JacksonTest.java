@@ -3,7 +3,7 @@ package org.reefy.transportrest;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
-import org.reefy.transportrest.api.transport.Contact;
+import org.reefy.core.transport.Contact;
 
 import java.io.IOException;
 

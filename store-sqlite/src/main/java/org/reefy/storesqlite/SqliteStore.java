@@ -2,12 +2,12 @@ package org.reefy.storesqlite;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.AbstractIdleService;
-import org.reefy.transportrest.api.Key;
-import org.reefy.transportrest.api.RawKey;
-import org.reefy.transportrest.api.RawValue;
-import org.reefy.transportrest.api.Value;
-import org.reefy.transportrest.api.store.Store;
-import org.reefy.transportrest.api.store.StoreException;
+import org.reefy.core.Key;
+import org.reefy.core.RawKey;
+import org.reefy.core.RawValue;
+import org.reefy.core.Value;
+import org.reefy.core.store.Store;
+import org.reefy.core.store.StoreException;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
