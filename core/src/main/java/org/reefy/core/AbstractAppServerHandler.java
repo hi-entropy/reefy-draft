@@ -1,6 +1,8 @@
 package org.reefy.core;
 
 import com.google.common.base.Preconditions;
+
+import org.reefy.core.contract.ContractMessage;
 import org.reefy.core.transport.Contact;
 
 // TODO: what is wrong with this import
@@ -11,15 +13,20 @@ import org.reefy.core.transport.Contact;
  */
 public class AbstractAppServerHandler {
     public static <C extends Contact> AppServerHandler.PutResponse<C> succeedPutResponse() {
-        return new PutResponse<C>(true, null, null);
+        return new PutResponse<C>(true, null, null, null);
     }
 
     public static <C extends Contact> AppServerHandler.PutResponse<C> redirectPutResponse(C redirect) {
-        return new PutResponse<C>(false, redirect, null);
+        return new PutResponse<C>(false, redirect, null, null);
     }
 
     public static <C extends Contact> AppServerHandler.PutResponse<C> failPutResponse(Exception exception) {
-        return new PutResponse<C>(false, null, exception);
+        return new PutResponse<C>(false, null, exception, null);
+    }
+
+    public static <C extends Contact> AppServerHandler.PutResponse<C> contractPutResponse(
+        ContractMessage contractMessage) {
+        return new PutResponse<C>(false, null, null, contractMessage);
     }
 
     public static class PutResponse<C extends Contact> implements AppServerHandler.PutResponse<C> {
@@ -32,17 +39,23 @@ public class AbstractAppServerHandler {
         //@Nullable
         private final Exception failed;
 
+        // @Nullable
+        private final ContractMessage contract;
+
         // TODO: redirected and failes should be nullable
-        private PutResponse(boolean succeeded, C redirected, Exception failed) {
+        private PutResponse(boolean succeeded, C redirected, Exception failed,
+                            ContractMessage contract) {
             int total = 0;
             total += (succeeded ? 1 : 0);
             total += (redirected != null ? 1 : 0);
             total += (failed != null ? 1 : 0);
-            Preconditions.checkArgument(total == 1, "Exactly one input must be ");
+            total += (contract != null ? 1 : 0);
+            Preconditions.checkArgument(total == 1, "Exactly one input must be non-null");
 
             this.succeeded = succeeded;
             this.redirected = redirected;
             this.failed = failed;
+            this.contract = contract;
         }
 
         @Override
@@ -60,6 +73,12 @@ public class AbstractAppServerHandler {
         @Override
         public Exception failed() {
             return failed;
+        }
+
+        //@Nullable
+        @Override
+        public ContractMessage contract() {
+            return contract;
         }
     }
 

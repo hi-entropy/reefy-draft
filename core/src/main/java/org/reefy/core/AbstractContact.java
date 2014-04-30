@@ -13,17 +13,17 @@ public class AbstractContact implements Contact {
     }
 
     @Override
-    public Key getKey() {
+    public final Key getKey() {
         return key;
     }
 
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return key.hashCode();
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public final boolean equals(Object obj) {
         if (obj == null) { return false; }
         if (obj == this) { return true; }
         if (! (obj instanceof Contact)) { return false; }

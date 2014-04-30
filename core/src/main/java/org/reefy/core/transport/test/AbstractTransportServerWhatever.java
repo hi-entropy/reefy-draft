@@ -7,7 +7,7 @@ import org.reefy.core.transport.Contact;
  * @author Paul Kernfeld <hi-entropy@gmail.com>
  */
 public class AbstractTransportServerWhatever<C extends Contact>
-    implements TransportFactory.ServerWhatever<C> {
+    implements TransportFactory.Serv1erWhatever<C> {
     private final C contact;
     private final TransportServer<C> server;
 
